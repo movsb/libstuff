@@ -77,7 +77,7 @@ private:
 Time now() {
 	timeval val{0, 0};
 	if (gettimeofday(&val, NULL) != 0) {
-		// panic
+		abort();
 	}
 	
 	Time t = {};

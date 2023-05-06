@@ -9,7 +9,10 @@
                 "${workspaceFolder}/build/config"
             ],
             "defines": [
-                "CONFIG_IDF_TARGET_ESP32C3"
+                "CONFIG_IDF_TARGET_ESP32C3",
+                "LWIP_DNS",
+                "LWIP_SOCKET",
+                "LWIP_PROVIDE_ERRNO",
             ],
             "macFrameworkPath": [],
             "compilerPath": "~/.espressif/tools/riscv32-esp-elf/esp-12.2.0_20230208/riscv32-esp-elf/bin/riscv32-esp-elf-g++",

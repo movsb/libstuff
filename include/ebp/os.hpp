@@ -27,7 +27,7 @@ public:
 	}
 	BaseType_t createTask(std::function<void()> func, const char* name) {
 		auto w = new __TaskProcWrapper{this, func};
-		if (auto err = xTaskCreate(__taskProc, name, 2024, w, 0, nullptr); err != pdPASS) {
+		if (auto err = xTaskCreate(__taskProc, name, 2048, w, 0, nullptr); err != pdPASS) {
 			delete w;
 			return err;
 		}
@@ -39,7 +39,8 @@ private:
 		auto w = reinterpret_cast<__TaskProcWrapper*>(arg);
 		auto func = w->func;
 		delete w;
-		return func();
+		func();
+		::vTaskDelete(nullptr);
 	}
 };
 
