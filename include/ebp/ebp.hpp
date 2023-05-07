@@ -7,3 +7,5 @@
 #include "os.hpp"
 #include "time.hpp"
 #include "net.hpp"
+
+#include "net/http.hpp"
