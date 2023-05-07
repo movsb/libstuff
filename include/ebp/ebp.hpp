@@ -8,4 +8,6 @@
 #include "time.hpp"
 #include "net.hpp"
 
+#include "wifi.hpp"
+
 #include "net/http.hpp"
