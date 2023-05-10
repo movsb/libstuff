@@ -37,7 +37,7 @@ protected:
 inline Duration operator*(int64_t n, const Duration &duration) { return duration * n; }
 inline Duration operator/(int64_t n, const Duration &duration) { return duration / n; }
 
-static const Duration
+inline const Duration
 	Nanosecond      = { 1 },
 	Microsecond     = { Nanosecond    * 1000 },
 	Millisecond     = { Microsecond   * 1000 },
@@ -47,7 +47,7 @@ static const Duration
 	Day             = { Hour          * 24   };
 
 
-static void sleep(Duration duration) {
+inline void sleep(Duration duration) {
 	vTaskDelay(duration.milliseconds() / portTICK_PERIOD_MS);
 }
 
@@ -89,7 +89,7 @@ private:
 	int64_t     _sec        :33;    // s, 272 years, from 1970-01-01 00:00:00.
 	int64_t     _micro      :20;    // us, 0-999999us
 	int64_t     _mono       :50;    // us, 35 years
-	int64_t     _offset     :7;     // 15m, the number 15 minutes, ± 14 hours.
+	int64_t     _offset     :7;     // 15m, the number 15 minutes east from UTC, ± 14 hours.
 
 public:
 	bool empty() const { return _sec == 0 && _micro == 0 && _mono == 0; }
@@ -146,6 +146,7 @@ private:
 };
 
 Time now();
+void setTZ(int offset);
 inline Duration since(const Time& past)    { return now() - past;      }
 inline Duration until(const Time& future)  { return future - now();    }
 

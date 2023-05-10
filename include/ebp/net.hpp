@@ -8,6 +8,8 @@
 
 #include <lwip/netdb.h>
 #include <lwip/sockets.h>
+#include <esp_netif.h>
+#include <esp_netif_sntp.h>
 
 namespace ebp {
 namespace net {
@@ -156,6 +158,23 @@ class Dialer {
 public:
 	static std::tuple<std::unique_ptr<Conn>, esp_err_t>
 	dial(const char *network, const char *address);
+};
+
+class SNTP {
+public:
+	static void start() {
+		esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG("pool.ntp.org");
+		config.smooth_sync = false;
+		config.wait_for_sync = true;
+		config.server_from_dhcp = true;
+		config.start = true;
+		if (auto err = esp_netif_sntp_init(&config); err != ESP_OK) {
+			abort();
+		}
+		if (config.wait_for_sync) {
+			esp_netif_sntp_sync_wait(portMAX_DELAY);
+		}
+	}
 };
 
 }

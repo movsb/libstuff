@@ -1,5 +1,9 @@
 #include "ebp/time.hpp"
 
+// from glibc.
+int     setenv(const char *__string, const char *__value, int __overwrite);
+void    tzset(void);
+
 namespace ebp {
 namespace time {
 
@@ -126,6 +130,36 @@ std::tuple<int, Month, int, int> Time::absDate(uint64_t absolute) const
 	return { year, month, day, yday };
 }
 
+static int g_timezone_offset =  0;
+
+// offset is in seconds east from the UTC.
+//
+// https://docs.espressif.com/projects/esp-idf/zh_CN/latest/esp32c3/api-reference/system/system_time.html#id3
+// https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html
+// std offset
+// The std string specifies the name of the time zone.
+// The offset specifies the time value you must add to the local time to get a Coordinated Universal Time value.
+// GMT+8 = CST, CST-8 = GMT.
+void setTZ(int offset)
+{
+	assert(-14*60*60 <= offset && offset <= 14*60*60);
+
+	g_timezone_offset = offset;
+	offset = -offset;
+
+	char    sign    = offset > 0 ? '+' : '-';
+	uint8_t hours   = offset / 60 / 60;
+	uint8_t minutes = offset / 60 % 60;
+
+	// CST-08:00 (CST is not care)
+	char buf[sizeof("CST-08:00")];
+
+	// the reminder operations is to eliminate warnings from gcc.
+	snprintf(buf, sizeof(buf), "CST%c%02d:%02d", sign, hours % 24, minutes % 60);
+	setenv("TZ", buf, 1);
+	tzset();
+}
+
 Time now()
 {
 	timeval val{0, 0};
@@ -136,8 +170,9 @@ Time now()
 	Time t = {};
 	t._sec      = val.tv_sec;
 	t._micro    = val.tv_usec;
-	t._offset   = 0;
 	t._mono     = esp_timer_get_time();
+
+	t._offset   = g_timezone_offset / 60 / 15;
 	return t;
 }
 
