@@ -3,6 +3,7 @@
 #include "helper.hpp"
 
 #include "base.hpp"
+#include "io.hpp"
 #include "gpio.hpp"
 #include "os.hpp"
 #include "time.hpp"
