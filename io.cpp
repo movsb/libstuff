@@ -15,7 +15,7 @@ std::tuple<int, esp_err_t> copy(Writer *dst, Reader& src)
 	esp_err_t err = ESP_OK;
 	
 	for (;;) {
-		auto [nr, er] = src.read(&buf[0], alt::count_of(buf));
+		auto [nr, er] = src.read(&buf[0], std::size(buf));
 		if (nr > 0) {
 			auto [nw, ew] = dst->write(buf, nr);
 			if (nw < 0 || nr < nw) {

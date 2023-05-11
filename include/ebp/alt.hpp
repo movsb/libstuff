@@ -24,11 +24,5 @@ std::tuple<T, bool> atoi(const char* str)
 	return { std::move(n), true };
 }
 
-// 求数组长度。
-template <typename T, std::size_t N>
-constexpr std::size_t count_of(T(&)[N]) {
-	return N;
-}
-
 } // namespace alt
 } // namespace ebp

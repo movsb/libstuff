@@ -77,10 +77,10 @@ esp_err_t (Station::connect)(const char *ssid, const char *password)
 	bzero(&wifiConfig, sizeof(wifiConfig));
 	auto &sta = wifiConfig.sta;
 	
-	if (ssid == nullptr || std::strlen(ssid) >= alt::count_of(sta.ssid)) {
+	if (ssid == nullptr || std::strlen(ssid) >= std::size(sta.ssid)) {
 		return ESP_ERR_INVALID_ARG;
 	}
-	if (password == nullptr || std::strlen(password) >= alt::count_of(sta.password)) {
+	if (password == nullptr || std::strlen(password) >= std::size(sta.password)) {
 		return ESP_ERR_INVALID_ARG;
 	}
 
