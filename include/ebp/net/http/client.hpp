@@ -57,8 +57,6 @@ public:
 		return roundTrip(req);
 	}
 
-public:
-	
 protected:
 	std::tuple<Response, esp_err_t>
 	roundTrip(const Request& req)
@@ -77,9 +75,7 @@ protected:
 protected:
 	static esp_err_t _eventHandler(esp_http_client_event_t *evt)
 	{
-		auto that = reinterpret_cast<Client*>(evt->user_data);
-		assert(that != nullptr);
-		return that->eventHandler(evt);
+		return reinterpret_cast<Client*>(evt->user_data)->eventHandler(evt);
 	}
 	esp_err_t eventHandler(esp_http_client_event_t *evt)
 	{

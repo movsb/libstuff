@@ -24,5 +24,21 @@ std::tuple<T, bool> atoi(const char* str)
 	return { std::move(n), true };
 }
 
+constexpr auto must(esp_err_t err)
+{
+	if (err != ESP_OK) { abort(); }
+	return std::tuple<>();
+}
+template <typename T, typename... Args>
+constexpr auto must(T first, Args... args)
+{
+	return std::tuple_cat(std::tuple<T>(first), must(args...));
+}
+template<typename... Args>
+auto must(const std::tuple<Args...>& args)
+{
+	return std::apply([](auto... args) { return must(args...); }, args);
+}
+
 } // namespace alt
 } // namespace ebp
