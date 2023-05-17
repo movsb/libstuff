@@ -49,5 +49,15 @@ private:
 	int _i;
 };
 
+class _EofReader : public Reader {
+public:
+	virtual std::tuple<int, esp_err_t> (read)(void *buf, size_t size) override {
+		return { 0, EOF };
+	}
+};
+
+extern _EofReader _eofReader;
+extern Reader* EofReader;
+
 }
 }

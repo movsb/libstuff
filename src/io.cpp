@@ -5,6 +5,9 @@ namespace io {
 	
 static constexpr int copyBufferSize = 64;
 
+_EofReader _eofReader;
+Reader* EofReader = &_eofReader;
+
 std::tuple<int, esp_err_t> copy(Writer *dst, Reader& src)
 {
 	// TODO: WriteTo & ReadFrom
@@ -37,8 +40,8 @@ std::tuple<int, esp_err_t> copy(Writer *dst, Reader& src)
 			}
 		}
 		if (er != ESP_OK) {
-			ESP_LOGE("io", "error reading: %d", er);
 			if (er != EOF) {
+				ESP_LOGE("io", "error reading: %d", er);
 				err = er;
 			}
 			break;

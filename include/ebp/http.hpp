@@ -14,6 +14,8 @@
 #include <esp_netif.h>
 #include <esp_http_client.h>
 
+#include "io.hpp"
+
 namespace ebp {
 namespace http {
 
@@ -50,6 +52,25 @@ protected:
 	
 using Method = esp_http_client_method_t;
 
+class _PlainBodyReader : public io::Reader
+{
+public:
+	_PlainBodyReader(esp_http_client_handle_t client)
+		: _client(client) {}
+		
+public:
+	virtual std::tuple<int, esp_err_t> (read)(void *buf, size_t size) override {
+		auto n = ::esp_http_client_read(_client, reinterpret_cast<char*>(buf), size);
+		if (n < 0) {
+			return { 0, n };
+		} else if (n == 0) {
+			return { 0, EOF };
+		}
+		return { n, ESP_OK };
+	}
+private:
+	esp_http_client_handle_t _client;
+};
 
 class Client {
 public:
@@ -57,6 +78,7 @@ public:
 	// 定义友元也不好，很简单的函数都要写在 cpp 文件内，否则“定义不完整”，垃圾语言。
 	// 后面使用 using 暴露到 http 域了。
 	class Request {
+		friend class Client;
 	public:
 		Request(Method method, const std::string &url) {
 			_method = method;
@@ -71,13 +93,17 @@ public:
 		uint8_t         _protoMajor  :4;
 		uint8_t         _protoMinor  :4;
 		
-		friend class Client;
+		std::string     _body;
 	};
 
 	class Response final {
 	public:
-		Response(Client &client) : _client(client) {
-		}
+		Response(Client &client)
+			: _client(client)
+			, _plainBodyReader(client.raw())
+			, _isChunked(false)
+			, _length(0)
+			 { }
 		~Response() {
 		}
 
@@ -88,10 +114,14 @@ public:
 		const Header& header() const {
 			return _client._headers;
 		}
+		io::Reader& body();
 
-		friend class Client;
 	protected:
-		Client &_client;
+		friend class Client;
+		Client              &_client;
+		_PlainBodyReader    _plainBodyReader;
+		bool                _isChunked; // 响应 body 是否为 chunked。
+		int                 _length; // 响应 body 大小（ >= 0）
 	};
 
 	friend class Request;
@@ -136,58 +166,14 @@ protected:
 	}
 
 protected:
-	std::tuple<Response, esp_err_t>
-	roundTrip(const Request& req)
-	{
-		// 准备工作，清理上次的数据。
-		_headers.clear();
-
-
-		::esp_http_client_set_url(_client, req._url.c_str());
-		::esp_http_client_set_method(_client, req._method);
-		
-		auto err = ::esp_http_client_perform(_client);
-		if (err != ESP_OK) {
-			return { Response(*this), err };
-		}
-
-		return { Response(*this), ESP_OK };
-	}
+	std::tuple<Response, esp_err_t> roundTrip(const Request& req);
 	
 protected:
 	static esp_err_t _eventHandler(esp_http_client_event_t *evt)
 	{
 		return reinterpret_cast<Client*>(evt->user_data)->eventHandler(evt);
 	}
-	esp_err_t eventHandler(esp_http_client_event_t *evt)
-	{
-		switch (evt->event_id) {
-		default:
-			puts("unhandled http event");
-			break;
-		case HTTP_EVENT_ERROR:
-			puts("HTTP error");
-			break;
-		case HTTP_EVENT_ON_CONNECTED:
-			break;
-		case HTTP_EVENT_HEADERS_SENT:
-			break;
-		case HTTP_EVENT_ON_HEADER:
-			// printf("got header: %s: %s\n", evt->header_key, evt->header_value);
-			_headers.set(evt->header_key, evt->header_value);
-			break;
-		case HTTP_EVENT_ON_DATA:
-			break;
-		case HTTP_EVENT_ON_FINISH:
-			break;
-		case HTTP_EVENT_DISCONNECTED:
-			break;
-		case HTTP_EVENT_REDIRECT:
-			break;
-		}
-		
-		return ESP_OK;
-	}
+	esp_err_t eventHandler(esp_http_client_event_t *evt);
 	
 protected:
 	esp_http_client_handle_t _client;
@@ -195,7 +181,7 @@ protected:
 };
 
 using Request = Client::Request;
-// using Response = Client::Response;
+using Response = Client::Response;
 
 } // namespace http
 } // namespace ebp

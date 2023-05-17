@@ -28,4 +28,6 @@ extern "C" void app_main(void)
 	for (auto &p : rsp.header()) {
 		printf("key: %s, value: %s\n", p.first.c_str(), p.second.c_str());
 	}
+	
+	io::copy(&os::StdOut, rsp.body());
 }
