@@ -20,13 +20,13 @@ extern "C" void app_main(void)
 	auto sta = wifi::Station{};
 	alt::must(sta.start());
 	alt::must(sta.connect("__tao_iot", "[0xTaoIot]"));
-
+	
 	auto client = http::Client();
-	auto [rsp] = alt::must(client.get("http://www.example.com"));
+	auto [rsp] = alt::must(client.get("http://192.168.1.102:8080/"));
 	printf("status code: %d\n", rsp.statusCode());
 	
 	for (auto &p : rsp.header()) {
-		printf("key: %s, value: %s\n", p.first.c_str(), p.second.c_str());
+		printf("%s: %s\n", p.first.c_str(), p.second.c_str());
 	}
 	
 	io::copy(&os::StdOut, rsp.body());

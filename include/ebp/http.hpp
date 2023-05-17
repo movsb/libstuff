@@ -52,26 +52,6 @@ protected:
 	
 using Method = esp_http_client_method_t;
 
-class _PlainBodyReader : public io::Reader
-{
-public:
-	_PlainBodyReader(esp_http_client_handle_t client)
-		: _client(client) {}
-		
-public:
-	virtual std::tuple<int, esp_err_t> (read)(void *buf, size_t size) override {
-		auto n = ::esp_http_client_read(_client, reinterpret_cast<char*>(buf), size);
-		if (n < 0) {
-			return { 0, n };
-		} else if (n == 0) {
-			return { 0, EOF };
-		}
-		return { n, ESP_OK };
-	}
-private:
-	esp_http_client_handle_t _client;
-};
-
 class Client {
 public:
 	// 很难定义在外面，因为要访问 client 内部的东西。。。
@@ -101,27 +81,48 @@ public:
 		Response(Client &client)
 			: _client(client)
 			, _plainBodyReader(client.raw())
-			, _isChunked(false)
-			, _length(0)
 			 { }
 		~Response() {
+			_client._headers.clear();
 		}
+	
+	private:
+		class _PlainBodyReader : public io::Reader
+		{
+		public:
+			_PlainBodyReader(esp_http_client_handle_t client)
+				: _client(client) {}
+				
+		public:
+			virtual std::tuple<int, esp_err_t> (read)(void *buf, size_t size) override {
+				auto n = ::esp_http_client_read(_client, reinterpret_cast<char*>(buf), size);
+				if (n < 0) {
+					return { 0, n };
+				} else if (n == 0) {
+					return { 0, EOF };
+				}
+				return { n, ESP_OK };
+			}
+		private:
+			esp_http_client_handle_t _client;
+		};
 
 	public:
+		// 返回状态码。
 		int statusCode() const {
 			return ::esp_http_client_get_status_code(_client.raw());
 		}
+		// 返回头部字段列表。
 		const Header& header() const {
 			return _client._headers;
 		}
+		// 返回 body，作为 io::Reader 流。
 		io::Reader& body();
 
 	protected:
 		friend class Client;
 		Client              &_client;
 		_PlainBodyReader    _plainBodyReader;
-		bool                _isChunked; // 响应 body 是否为 chunked。
-		int                 _length; // 响应 body 大小（ >= 0）
 	};
 
 	friend class Request;

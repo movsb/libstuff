@@ -91,24 +91,28 @@ std::tuple<Response, esp_err_t> Client::roundTrip(const Request& req)
 		return { rsp, ESP_FAIL };
 	}
 	
-	rsp._length = static_cast<int>(::esp_http_client_get_content_length(_client));
-	rsp._isChunked = ::esp_http_client_is_chunked_response(_client);
 
 	return { rsp, ESP_OK };
 }
 
 io::Reader& Response::body()
 {
-	if (_length == 0 && !_isChunked) {
+	auto length = static_cast<int>(::esp_http_client_get_content_length(_client.raw()));
+	auto isChunked = ::esp_http_client_is_chunked_response(_client.raw());
+
+	if (length == 0 && !isChunked) {
 		return *io::EofReader;
 	}
-	if (_length > 0) {
+	if (length > 0) {
 		return _plainBodyReader;
 	}
-	if (_isChunked) {
-		abort();
+	// http_parser 把 chunked 也处理了（为了知道 body 结束了）。
+	// 所以这里的 plain 也可以用于读取 chunked body 🥵
+	if (isChunked) {
+		return _plainBodyReader;
 	}
 	// 其实还有一种情况没处理：没有 content-length，也没有 chunked。很正常的一种情况。
+	// 但是好像 esp 把它当成 chunked 处理？有点不规范。。。
 	abort();
 }
 
