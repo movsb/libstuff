@@ -50,44 +50,50 @@ protected:
 	
 using Method = esp_http_client_method_t;
 
-class Client;
-
-class Request {
-public:
-	Request(Method method, const std::string &url) {
-		_method = method;
-		_url = url;
-	}
-
-protected:
-	Method          _method;
-	std::string     _url;
-	
-	std::string     _proto;
-	uint8_t         _protoMajor  :4;
-	uint8_t         _protoMinor  :4;
-	
-	friend class Client;
-};
-
-
-class Response final {
-public:
-	Response(Client &client) : _client(client) {
-	}
-	~Response() {
-	}
-
-public:
-	int statusCode() const;
-	const Header &header() const;
-
-	friend class Client;
-protected:
-	Client &_client;
-};
 
 class Client {
+public:
+	// 很难定义在外面，因为要访问 client 内部的东西。。。
+	// 定义友元也不好，很简单的函数都要写在 cpp 文件内，否则“定义不完整”，垃圾语言。
+	// 后面使用 using 暴露到 http 域了。
+	class Request {
+	public:
+		Request(Method method, const std::string &url) {
+			_method = method;
+			_url = url;
+		}
+
+	protected:
+		Method          _method;
+		std::string     _url;
+		
+		std::string     _proto;
+		uint8_t         _protoMajor  :4;
+		uint8_t         _protoMinor  :4;
+		
+		friend class Client;
+	};
+
+	class Response final {
+	public:
+		Response(Client &client) : _client(client) {
+		}
+		~Response() {
+		}
+
+	public:
+		int statusCode() const {
+			return ::esp_http_client_get_status_code(_client.raw());
+		}
+		const Header& header() const {
+			return _client._headers;
+		}
+
+		friend class Client;
+	protected:
+		Client &_client;
+	};
+
 	friend class Request;
 	friend class Response;
 public:
@@ -187,6 +193,9 @@ protected:
 	esp_http_client_handle_t _client;
 	Header _headers;
 };
+
+using Request = Client::Request;
+// using Response = Client::Response;
 
 } // namespace http
 } // namespace ebp

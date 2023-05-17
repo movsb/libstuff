@@ -64,12 +64,5 @@ bool Header::isToken(char c)
 	return false;
 }
 
-int Response::statusCode() const {
-	return ::esp_http_client_get_status_code(_client.raw());
-}
-const Header& Response::header() const {
-	return _client._headers;
-}
-
 } // namespace http
 } // namespace ebp
