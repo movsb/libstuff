@@ -25,17 +25,11 @@ static void t(void*)
 	auto [rsp] = alt::must(client.get("http://192.168.1.86:7899/relative-redirect/1"));
 	printf("status code: %d\n", rsp.statusCode());
 	
-	time::sleep(time::Second*5);
-
 	for (auto &p : rsp.header()) {
 		printf("%s: %s\n", p.first.c_str(), p.second.c_str());
 	}
 	
-	time::sleep(time::Second*5);
-
 	io::copy(&os::StdOut, rsp.body());
-	
-	time::sleep(time::Minute);
 }
 
 extern "C" void app_main(void)

@@ -94,7 +94,6 @@ public:
 		Response(const Response &) = delete;
 		Response(Response&& ref)
 			: _client(ref._client)
-			, _headers(std::move(ref._headers))
 			, _plainBodyReader(ref._client->raw())
 			{
 				ESP_LOGI("http", "move response construct");
@@ -130,7 +129,7 @@ public:
 		// 返回头部字段列表。
 		const Header& header() const {
 			alt::must(_client);
-			return _headers;
+			return _client->_headers;
 		}
 		// 返回 body，作为 io::Reader 流。
 		io::Reader& body();
@@ -138,7 +137,6 @@ public:
 	protected:
 		friend class Client;
 		Client              *_client;
-		Header              _headers;
 		_PlainBodyReader    _plainBodyReader;
 	};
 
