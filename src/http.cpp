@@ -64,13 +64,41 @@ bool Header::isToken(char c)
 	return false;
 }
 
-std::tuple<Response, esp_err_t> Client::roundTrip(const Request& req)
+
+std::tuple<Response, esp_err_t> Client::execute(const Request& req)
+{
+	static constexpr int maxRedirects = 10;
+	
+	std::string url(req._url);
+	
+	for (int nRedirects = 0; nRedirects < maxRedirects; nRedirects++) {
+		auto [rsp, err] = roundTrip(req, url.c_str());
+		if (err != ESP_OK) { return { std::move(rsp), err }; }
+		switch (::esp_http_client_get_status_code(_client)) {
+		default:
+			return { std::move(rsp), err };
+		case HttpStatus_MovedPermanently:
+		case HttpStatus_Found:
+		case HttpStatus_SeeOther:
+		case HttpStatus_TemporaryRedirect:
+		case HttpStatus_PermanentRedirect:
+			url = rsp.header().get("Location");
+			if (url.empty()) {
+				ESP_LOGW("http", "invalid empty redirection url");
+				return { Response(this), ESP_FAIL };
+			}
+			ESP_LOGI("http", "redirection: location=%s", url.c_str());
+		}
+	}
+}
+
+std::tuple<Response, esp_err_t> Client::roundTrip(const Request& req, const char* url)
 {
 	// 准备工作，清理上次的数据。
 	// TODO：清理干净
 	_headers.clear();
 
-	::esp_http_client_set_url(_client, req._url.c_str());
+	::esp_http_client_set_url(_client, url);
 	::esp_http_client_set_method(_client, req._method);
 	
 	// 打开连接，写入头部
@@ -122,20 +150,26 @@ esp_err_t Client::eventHandler(esp_http_client_event_t *evt)
 		puts("HTTP error");
 		break;
 	case HTTP_EVENT_ON_CONNECTED:
+		ESP_LOGI("http", "connected");
 		break;
 	case HTTP_EVENT_HEADERS_SENT:
+		ESP_LOGI("http", "headers sent");
 		break;
 	case HTTP_EVENT_ON_HEADER:
 		// printf("got header: %s: %s\n", evt->header_key, evt->header_value);
 		_headers.set(evt->header_key, evt->header_value);
 		break;
 	case HTTP_EVENT_ON_DATA:
+		ESP_LOGI("http", "data");
 		break;
 	case HTTP_EVENT_ON_FINISH:
+		ESP_LOGI("http", "finished");
 		break;
 	case HTTP_EVENT_DISCONNECTED:
+		ESP_LOGI("http", "disconnected");
 		break;
 	case HTTP_EVENT_REDIRECT:
+		ESP_LOGI("http", "need redirection");
 		break;
 	}
 	

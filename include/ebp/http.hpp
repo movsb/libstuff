@@ -161,7 +161,7 @@ public:
 	get(const std::string& url)
 	{
 		Request req(Method::HTTP_METHOD_GET, url);
-		return roundTrip(req);
+		return execute(req);
 	}
 	
 	std::tuple<Response, esp_err_t>
@@ -172,7 +172,7 @@ public:
 		::esp_http_client_set_header(_client, "Content-Type", contentType.c_str());
 		::esp_http_client_set_post_field(_client, body.c_str(), body.size());
 
-		return roundTrip(req);
+		return execute(req);
 	}
 	
 protected:
@@ -182,7 +182,8 @@ protected:
 	}
 
 protected:
-	std::tuple<Response, esp_err_t> roundTrip(const Request& req);
+	std::tuple<Response, esp_err_t> execute(const Request& req);
+	std::tuple<Response, esp_err_t> roundTrip(const Request& req, const char* url);
 	
 protected:
 	static esp_err_t _eventHandler(esp_http_client_event_t *evt)
