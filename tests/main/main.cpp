@@ -11,7 +11,7 @@
 
 using namespace ebp;
 
-extern "C" void app_main(void)
+static void t(void*)
 {
 	ESP_ERROR_CHECK( nvs_flash_init() );
 	ESP_ERROR_CHECK(esp_netif_init());
@@ -22,12 +22,23 @@ extern "C" void app_main(void)
 	alt::must(sta.connect("__tao_iot", "[0xTaoIot]"));
 	
 	auto client = http::Client();
-	auto [rsp] = alt::must(client.get("http://192.168.1.102:8080/"));
+	auto [rsp] = alt::must(client.get("http://192.168.1.86:7899/relative-redirect/1"));
 	printf("status code: %d\n", rsp.statusCode());
 	
+	time::sleep(time::Second*5);
+
 	for (auto &p : rsp.header()) {
 		printf("%s: %s\n", p.first.c_str(), p.second.c_str());
 	}
 	
+	time::sleep(time::Second*5);
+
 	io::copy(&os::StdOut, rsp.body());
+	
+	time::sleep(time::Minute);
+}
+
+extern "C" void app_main(void)
+{
+	os::createTask([]{t(nullptr);});
 }

@@ -64,11 +64,8 @@ bool Header::isToken(char c)
 	return false;
 }
 
-
 std::tuple<Response, esp_err_t> Client::roundTrip(const Request& req)
 {
-	Response rsp(*this);
-
 	// 准备工作，清理上次的数据。
 	// TODO：清理干净
 	_headers.clear();
@@ -78,27 +75,26 @@ std::tuple<Response, esp_err_t> Client::roundTrip(const Request& req)
 	
 	// 打开连接，写入头部
 	if (auto err = ::esp_http_client_open(_client, req._body.size()); err != ESP_OK) {
-		return { rsp, err };
+		return { Response(this), err };
 	}
 	
 	// 写入 body。没有的话，什么也不干。
 	if (auto wn = ::esp_http_client_write(_client, req._body.c_str(), req._body.size()); wn != req._body.size()) {
-		return { rsp, ESP_FAIL };
+		return { Response(this), ESP_FAIL };
 	}
 
 	// 获取响应头部
 	if (auto n = ::esp_http_client_fetch_headers(_client); n < 0) {
-		return { rsp, ESP_FAIL };
+		return { Response(this), ESP_FAIL };
 	}
 	
-
-	return { rsp, ESP_OK };
+	return { Response(this), ESP_OK };
 }
 
 io::Reader& Response::body()
 {
-	auto length = static_cast<int>(::esp_http_client_get_content_length(_client.raw()));
-	auto isChunked = ::esp_http_client_is_chunked_response(_client.raw());
+	auto length = static_cast<int>(::esp_http_client_get_content_length(_client->raw()));
+	auto isChunked = ::esp_http_client_is_chunked_response(_client->raw());
 
 	if (length == 0 && !isChunked) {
 		return *io::EofReader;

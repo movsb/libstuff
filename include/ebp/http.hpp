@@ -22,6 +22,12 @@ namespace http {
 class Header
 {
 public:
+	Header() {}
+	Header(const Header&) = delete;
+	Header(Header&& ref) {
+		_headers = std::move(ref._headers);
+	}
+public:
 	void clear()                                                { _headers.clear(); }
 	std::size_t size() const                                    { return _headers.size(); }
 	void set(const std::string &key, const std::string &value)  { return set(key.c_str(), value.c_str()); }
@@ -78,13 +84,22 @@ public:
 
 	class Response final {
 	public:
-		Response(Client &client)
+		Response(Client *client)
 			: _client(client)
-			, _plainBodyReader(client.raw())
+			, _plainBodyReader(client->raw())
 			 { }
 		~Response() {
-			_client._headers.clear();
+			ESP_LOGI("http", "Response deconstructed");
 		}
+		Response(const Response &) = delete;
+		Response(Response&& ref)
+			: _client(ref._client)
+			, _headers(std::move(ref._headers))
+			, _plainBodyReader(ref._client->raw())
+			{
+				ESP_LOGI("http", "move response construct");
+				ref._client = nullptr;
+			}
 	
 	private:
 		class _PlainBodyReader : public io::Reader
@@ -110,18 +125,20 @@ public:
 	public:
 		// 返回状态码。
 		int statusCode() const {
-			return ::esp_http_client_get_status_code(_client.raw());
+			return ::esp_http_client_get_status_code(_client->raw());
 		}
 		// 返回头部字段列表。
 		const Header& header() const {
-			return _client._headers;
+			alt::must(_client);
+			return _headers;
 		}
 		// 返回 body，作为 io::Reader 流。
 		io::Reader& body();
 
 	protected:
 		friend class Client;
-		Client              &_client;
+		Client              *_client;
+		Header              _headers;
 		_PlainBodyReader    _plainBodyReader;
 	};
 
@@ -177,8 +194,8 @@ protected:
 	esp_err_t eventHandler(esp_http_client_event_t *evt);
 	
 protected:
-	esp_http_client_handle_t _client;
-	Header _headers;
+	esp_http_client_handle_t    _client;
+	Header                      _headers;
 };
 
 using Request = Client::Request;
