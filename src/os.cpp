@@ -23,7 +23,7 @@ esp_err_t bindStdioWithUART(uint8_t num)
 	setvbuf(stdin, nullptr, _IONBF, 0);
 
 	// Install UART driver for interrupt-driven reads and writes
-	if (auto err = uart_driver_install(0, SOC_UART_FIFO_LEN+1, 0, 0, NULL, 0); err != ESP_OK) {
+	if (auto err = uart_driver_install(UART_NUM_0, SOC_UART_FIFO_LEN+1, 0, 0, NULL, 0); err != ESP_OK) {
 		return err;
 	}
 

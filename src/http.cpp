@@ -90,6 +90,8 @@ std::tuple<Response, esp_err_t> Client::execute(const Request& req)
 			ESP_LOGI("http", "redirection: location=%s", url.c_str());
 		}
 	}
+	return { Response(this), ESP_OK };
+	// abort(); // TODO
 }
 
 std::tuple<Response, esp_err_t> Client::roundTrip(const Request& req, const char* url)
