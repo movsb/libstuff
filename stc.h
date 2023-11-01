@@ -30,13 +30,26 @@ typedef unsigned long       uint32;
 #endif // SDCC
 
 // 特殊功能寄存器
+SFR(TCON,   0x88);
+	SBIT(TR1,   0x88,   6);
+SFR(TMOD,   0x89);
+SFR(TL1,    0x8B);
+SFR(TH1,    0x8D);
+
 SFR(AUXR,   0x8E);
+SFR(P1M1,   0x91);
+SFR(P1M0,   0x92);
+SFR(P0M1,   0x93);
+SFR(P0M0,   0x94);
+SFR(P2M1,   0x95);
+SFR(P2M0,   0x96);
 SFR(SCON,   0x98);
 	SBIT(RI,    0x98, 0);
 	SBIT(TI,    0x98, 1);
 SFR(SBUF,   0x99);
 
 SFR(IE,     0xA8);
+	SBIT(ET1,   0xA8,   3);
 	SBIT(ES,    0xA8,   4);
 	SBIT(EA,    0xA8,   7);
 	
@@ -46,12 +59,21 @@ SFR(P3,     0xB0);
 	SBIT(P32,   0xB0,   2);
 	SBIT(P33,   0xB0,   3);
 	
+SFR(P3M1,   0xB1);
+SFR(P3M0,   0xB2);
+SFR(P4M1,   0xB3);
+SFR(P4M0,   0xB4);
+
 SFR(P5,     0xC8);
 	SBIT(P54,   0xC8,   4);
 
+SFR(P5M1,   0xC9);
+SFR(P5M0,   0xCA);
+SFR(P6M1,   0xCB);
+SFR(P6M0,   0xCC);
+
 SFR(P3M1,   0xB1);
 SFR(P3M0,   0xB2);
-SFR(AUX,    0x8E);
 SFR(P5M1,   0xC9);
 SFR(P5M0,   0xCA);
 SFR(T2H,    0xD6);

@@ -8,9 +8,10 @@ volatile int8 uartBusy;
 void UARTInit(uint32 baudrate) {
 	uint16 t = 65536 - FOSC / baudrate / 4;
 	SCON = 0x50;
-	T2L = (byte)(t);
-	T2H = (byte)(t >> 8);
-	AUXR = 0x15;
+	TL1 = (byte)(t);
+	TH1 = (byte)(t >> 8);
+	AUXR = 0x40;
+	TR1 = 1;
 	ES = 1;
 	uartBusy = 0;
 }
