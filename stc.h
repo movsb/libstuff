@@ -27,9 +27,25 @@ typedef unsigned long       uint32;
 #define SFR(name, addr)             __sfr   __at(addr)      name
 #define INTERRUPT(vector)           __interrupt (vector)
 
+#define NOP() __asm NOP __endasm
+
 #endif // SDCC
 
 // 特殊功能寄存器
+//
+// 注意：寄存器地址能够被 8 整除的才可进行位寻址，不能被 8 整除的则不可位寻址。
+
+// 电源控制寄存器（复位值：0011,0000）
+SFR(PCON,   0x87);
+	#define IDL     0x01    // 空闲模式控制位。1：单片机进入 IDLE 模式，只有 CPU 停止工作，其他外设依然在运行。唤醒后硬件自动清零。
+	#define PD      0x02    // 时钟停振模式/掉电模式/停电模式控制位（Power Down）。1：单片机进入时钟停振模式/掉电模式/停电模式，CPU 以及全部外设均停止工作。唤醒后硬件自动清零。
+	#define GF0     0x04
+	#define GF1     0x08
+	#define POF     0x10    // 上电复位标志位。MCU 每次重新上电后，硬件自动将此位置 1，可软件将此位清零。
+	#define LVDF    0x20    // 低压检测标志位。当系统检测到低压事件时，硬件自动将此位置 1，并向 CPU 提出中断请求。此位需要用户软件清零。
+	#define SMOD0   0x40
+	#define SMOD    0x80
+
 SFR(TCON,   0x88);
 	SBIT(TR1,   0x88,   6);
 SFR(TMOD,   0x89);
@@ -72,10 +88,6 @@ SFR(P5M0,   0xCA);
 SFR(P6M1,   0xCB);
 SFR(P6M0,   0xCC);
 
-SFR(P3M1,   0xB1);
-SFR(P3M0,   0xB2);
-SFR(P5M1,   0xC9);
-SFR(P5M0,   0xCA);
 SFR(T2H,    0xD6);
 SFR(T2L,    0xD7);
 
@@ -106,5 +118,28 @@ void    SpiWrite        (uint8 cmd, uint8 value);
 void    SpiWrites       (uint8 cmd, const uint8 *data, uint8 len);
 uint8   SpiRead         (uint8 cmd);
 void    SpiReads        (uint8 cmd, uint8 *data, uint8 len);
+
+// 电源控制。
+// 
+// 
+
+// 掉电唤醒
+// 如果 STC8 系列单片机内置掉电唤醒专用定时器被允许（通过软件将 WKTCH 寄存器中的 WKTEN
+// 位置 1），当 MCU 进入掉电模式/停机模式后，掉电唤醒专用定时器开始计数，当计数值与用户所设置的
+// 值相等时，掉电唤醒专用定时器将 MCU 唤醒。
+
+SFR(WKTCL,      0xAA);  // 掉电唤醒定时器计数寄存器
+SFR(WKTCH,      0xAB);
+	#define WKTEN       0x80
+
+void PowerControl_EnableWakeupTimer(int16 seconds);
+void PowerControl_DisableWakeupTimer(void);
+uint16 PowerControl_GetWakeupTimerClockFrequency(void);
+
+// 进入掉电模式。
+void PowerControl_PowerDown(void);
+
+// 7.3 存储器中的特殊参数
+
 
 #endif // __STC_H__

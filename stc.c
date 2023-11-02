@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#define __STC_STC8G1K08A__
 #define FOSC 11059200UL
 #include "stc.h"
 
@@ -146,3 +147,103 @@ void SpiReads(uint8 cmd, uint8 *data, uint8 len) {
 	}
 	CSN(1);
 }
+
+// 电源控制（Power Control，Pc）
+// PowerControl_EnableWakeupTimer
+
+// 使用stc15掉电唤醒专用定时器和掉电模式时有哪三个容易犯错的问题
+// http://www.dumenmen.com/thread-1078-1-1.html
+// 如果唤醒时间比较长，那么当前计数器是不够一次性到达的，需要多次计数。
+// 每唤醒一次减掉一部分。
+static uint32 _PowerControl_WakeupCountNeeded = 0;
+static uint32 _PowerControl_WakeupCountSaved = 0;
+void _PowerControl_ReloadWakeupTimer(void);
+
+// 启用唤醒定时器。
+// 单位精确到秒（够用？）
+void PowerControl_EnableWakeupTimer(int16 seconds) {
+	if(seconds < 1) {
+		return;
+	}
+
+	// Target wakeup frequency: 34.900 KHz
+	// TODO: 应该用 PowerControl_GetWakeupTimerClockFrequency() 获取，
+	// 但是目前拿到的数据是错误的。
+	static const uint32 wakeUpFrequency = 34900;
+
+	_PowerControl_WakeupCountNeeded = (uint32)(seconds) * wakeUpFrequency / 16;
+	_PowerControl_WakeupCountSaved = _PowerControl_WakeupCountNeeded;
+
+	_PowerControl_ReloadWakeupTimer();
+}
+
+void PowerControl_DisableWakeupTimer(void) {
+	WKTCH = 0x00;
+	
+	_PowerControl_WakeupCountNeeded = 0;
+	_PowerControl_WakeupCountSaved = 0;
+}
+
+// _PowerControl_WakeupCountNeeded 必须 > 0 才能进来
+void _PowerControl_ReloadWakeupTimer(void) {
+	uint16 count = 0;
+	
+	static const uint16 slice = 32765;
+
+	if (_PowerControl_WakeupCountNeeded >= slice) {
+		count = slice;
+		_PowerControl_WakeupCountNeeded -= slice;
+	} else {
+		count = (uint16)_PowerControl_WakeupCountNeeded;
+		_PowerControl_WakeupCountNeeded = 0;
+	}
+
+	uint8 lo = (uint8)(count&0xFF);
+	uint8 hi = (uint8)(count >> 8) | 0x80;
+	UARTSendFormat("lo and hi: %02X %02X\r\n", lo, hi);
+
+	WKTCL = (uint8)(count&0xFF);
+	WKTCH = (uint8)(count >> 8) | 0x80; // 只能赋值，不能 或 运算
+
+	UARTSendFormat("Bytes are: %02X %02X\r\n", WKTCH, WKTCL);
+}
+
+// 获取内部掉电唤醒专用定时器出厂时所记录的时钟频率
+// 官方文档的 0xF8 和 0xF9 是错误的，“7.3.6 读取 32K 掉电唤醒定时器的频率 (从 RAM 中读取)” 已经被划掉了。
+/* 拿到的数据是错的，先屏蔽。
+uint16 PowerControl_GetWakeupTimerClockFrequency(void) {
+	uint16 hi = *(int8 __code*)0x1FF5;
+	uint16 lo = *(int8 __code*)0x1FF6;
+	return hi << 8 | lo;
+}
+*/
+
+void PowerControl_PowerDown(void) {
+	while(1) {
+		PCON |= PD;
+		NOP();
+		NOP();
+		
+		UARTSendFormat("Bytes are: %02X %02X\r\n", WKTCH, WKTCL);
+
+		// 唤醒后如果原因是唤醒定时器且时间未达到，则继续睡。
+		if (_PowerControl_WakeupCountNeeded > 0) {
+			_PowerControl_ReloadWakeupTimer();
+			continue;
+		}
+		
+		// 真的唤醒了，恢复计数器原始值。
+		if (_PowerControl_WakeupCountSaved > 0) {
+			_PowerControl_WakeupCountNeeded = _PowerControl_WakeupCountSaved;
+			_PowerControl_ReloadWakeupTimer();
+		}
+		
+		break;
+	}
+}
+
+// 7.3 存储器中的特殊参数
+#ifdef __STC_STC8G1K08A__
+	#define STC_UUID_ADDR   0x1FF9 // 7 个字节
+#endif
+
