@@ -48,6 +48,7 @@ SFR(PCON,   0x87);
 
 SFR(TCON,   0x88);
 	SBIT(TR1,   0x88,   6);
+	SBIT(IT1,   0x88,   2); // 外部中断源1触发控制位。
 SFR(TMOD,   0x89);
 SFR(TL1,    0x8B);
 SFR(TH1,    0x8D);
@@ -65,6 +66,7 @@ SFR(SCON,   0x98);
 SFR(SBUF,   0x99);
 
 SFR(IE,     0xA8);
+	SBIT(EX1,   0xA8,   2);
 	SBIT(ET1,   0xA8,   3);
 	SBIT(ES,    0xA8,   4);
 	SBIT(EA,    0xA8,   7);
