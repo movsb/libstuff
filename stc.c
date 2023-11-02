@@ -153,14 +153,9 @@ void SpiReads(uint8 cmd, uint8 *data, uint8 len) {
 
 // 使用stc15掉电唤醒专用定时器和掉电模式时有哪三个容易犯错的问题
 // http://www.dumenmen.com/thread-1078-1-1.html
-// 如果唤醒时间比较长，那么当前计数器是不够一次性到达的，需要多次计数。
-// 每唤醒一次减掉一部分。
-static uint32 _PowerControl_WakeupCountNeeded = 0;
-static uint32 _PowerControl_WakeupCountSaved = 0;
-void _PowerControl_ReloadWakeupTimer(void);
 
 // 启用唤醒定时器。
-// 单位精确到秒（够用？）
+// 单位精确到秒（够用？）暂定最多 10 秒（因为 32K 的频率寄存器计数不正确）
 void PowerControl_EnableWakeupTimer(int16 seconds) {
 	if(seconds < 1) {
 		return;
@@ -171,41 +166,14 @@ void PowerControl_EnableWakeupTimer(int16 seconds) {
 	// 但是目前拿到的数据是错误的。
 	static const uint32 wakeUpFrequency = 34900;
 
-	_PowerControl_WakeupCountNeeded = (uint32)(seconds) * wakeUpFrequency / 16;
-	_PowerControl_WakeupCountSaved = _PowerControl_WakeupCountNeeded;
-
-	_PowerControl_ReloadWakeupTimer();
-}
-
-void PowerControl_DisableWakeupTimer(void) {
-	WKTCH = 0x00;
-	
-	_PowerControl_WakeupCountNeeded = 0;
-	_PowerControl_WakeupCountSaved = 0;
-}
-
-// _PowerControl_WakeupCountNeeded 必须 > 0 才能进来
-void _PowerControl_ReloadWakeupTimer(void) {
-	uint16 count = 0;
-	
-	static const uint16 slice = 32765;
-
-	if (_PowerControl_WakeupCountNeeded >= slice) {
-		count = slice;
-		_PowerControl_WakeupCountNeeded -= slice;
-	} else {
-		count = (uint16)_PowerControl_WakeupCountNeeded;
-		_PowerControl_WakeupCountNeeded = 0;
-	}
-
-	uint8 lo = (uint8)(count&0xFF);
-	uint8 hi = (uint8)(count >> 8) | 0x80;
-	UARTSendFormat("lo and hi: %02X %02X\r\n", lo, hi);
+	uint16 count = (uint32)(seconds) * wakeUpFrequency / 16;
 
 	WKTCL = (uint8)(count&0xFF);
 	WKTCH = (uint8)(count >> 8) | 0x80; // 只能赋值，不能 或 运算
+}
 
-	UARTSendFormat("Bytes are: %02X %02X\r\n", WKTCH, WKTCL);
+void PowerControl_DisableWakeupTimer(void) {
+	WKTCH = 0x00; // 不要用位运算
 }
 
 // 获取内部掉电唤醒专用定时器出厂时所记录的时钟频率
@@ -223,21 +191,9 @@ void PowerControl_PowerDown(void) {
 		PCON |= PD;
 		NOP();
 		NOP();
-		
-		UARTSendFormat("Bytes are: %02X %02X\r\n", WKTCH, WKTCL);
 
-		// 唤醒后如果原因是唤醒定时器且时间未达到，则继续睡。
-		if (_PowerControl_WakeupCountNeeded > 0) {
-			_PowerControl_ReloadWakeupTimer();
-			continue;
-		}
-		
-		// 真的唤醒了，恢复计数器原始值。
-		if (_PowerControl_WakeupCountSaved > 0) {
-			_PowerControl_WakeupCountNeeded = _PowerControl_WakeupCountSaved;
-			_PowerControl_ReloadWakeupTimer();
-		}
-		
+		// TODO: 长时间唤醒定时器
+
 		break;
 	}
 }
