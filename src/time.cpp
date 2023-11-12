@@ -176,5 +176,12 @@ Time now()
 	return t;
 }
 
+Time ticks()
+{
+	Time t;
+	t._mono = esp_timer_get_time();
+	return t;
+}
+
 }
 }

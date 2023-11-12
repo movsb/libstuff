@@ -25,17 +25,27 @@ public:
 	double  minutes()       const { return seconds()        / 60.0;     }
 	double  hours()         const { return minutes()        / 60.0;     }
 	double  days()          const { return hours()          / 24.0;     }
+	uint32_t ticks()        const {
+		auto n = milliseconds() / portTICK_PERIOD_MS;
+		return n < 0 ? 0 : n;
+	}
 	
-	Duration operator*(int64_t n)       const { return _t * n;          }
-	Duration operator/(int64_t n)       const { return _t / n;          }
+	Duration operator*(double n)                const { return _t * n;              }
+	Duration operator/(double n)                const { return _t / n;              }
+	bool operator<(const Duration& other)       const { return _t < other._t ;      }
+	bool operator>(const Duration& other)       const { return _t > other._t ;      }
+	bool operator==(const Duration& other)      const { return _t == other._t;      }
+	bool operator<=(const Duration& other)      const { return ! (*this > other);   }
+	bool operator>=(const Duration& other)      const { return ! (*this < other);   }
+	bool operator!=(const Duration& other)      const { return ! (*this == other);  }
 
 protected:
 	int64_t _t;
 };
 	
 // To Allow expressions like N * Duration, where N is a constant.
-inline Duration operator*(int64_t n, const Duration &duration) { return duration * n; }
-inline Duration operator/(int64_t n, const Duration &duration) { return duration / n; }
+inline Duration operator*(double n, const Duration &duration) { return duration * n; }
+inline Duration operator/(double n, const Duration &duration) { return duration / n; }
 
 inline const Duration
 	Nanosecond      = { 1 },
@@ -48,7 +58,7 @@ inline const Duration
 
 
 inline void sleep(Duration duration) {
-	vTaskDelay(duration.milliseconds() / portTICK_PERIOD_MS);
+	vTaskDelay(duration.ticks());
 }
 
 enum class Month : uint8_t {
@@ -135,6 +145,7 @@ public:
 	
 private:
 	friend Time now();
+	friend Time ticks();
 
 	bool hasMono() const { return _mono > 0; }
 	void stripMono() { _mono = 0; }
@@ -146,6 +157,7 @@ private:
 };
 
 Time now();
+Time ticks();
 void setTZ(int offset);
 inline Duration since(const Time& past)    { return now() - past;      }
 inline Duration until(const Time& future)  { return future - now();    }
