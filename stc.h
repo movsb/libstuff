@@ -5,6 +5,9 @@
 #define __SDCC
 #endif
 
+// TODO
+#define FOSC 11059200UL
+
 #ifndef FOSC
 	#error "FOSC is not defined"
 #endif
@@ -82,8 +85,13 @@ SFR(P3M0,   0xB2);
 SFR(P4M1,   0xB3);
 SFR(P4M0,   0xB4);
 
+SFR(IAP_CONTR,      0xC7);
+	#define SWBS    0x40 // 复位后进入 IAP
+	#define SWRST   0x20 // 软件复位
+
 SFR(P5,     0xC8);
 	SBIT(P54,   0xC8,   4);
+	SBIT(P55,   0xC8,   5);
 
 SFR(P5M1,   0xC9);
 SFR(P5M0,   0xCA);
@@ -121,6 +129,9 @@ void    SpiWrites       (uint8 cmd, const uint8 *data, uint8 len);
 uint8   SpiRead         (uint8 cmd);
 void    SpiReads        (uint8 cmd, uint8 *data, uint8 len);
 
+void SpiSetDataBit(uint8 bit);
+uint8 SpiGetDataBit(void);
+
 // 电源控制。
 // 
 // 
@@ -140,6 +151,10 @@ uint16 PowerControl_GetWakeupTimerClockFrequency(void);
 
 // 进入掉电模式。
 void PowerControl_PowerDown(void);
+// 复位
+void PowerControl_SoftReset(void);
+// 复位到下载模式
+void PowerControl_SoftResetToIap(void);
 
 // 7.3 存储器中的特殊参数
 

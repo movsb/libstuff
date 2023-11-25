@@ -60,9 +60,9 @@ void UARTHandler(void) INTERRUPT(4) {
 	}
 }
 
-#define CLK(n) (P32 = (n))
-#define DAT(n) (P33 = (n))
-#define DAT_GET() (P33)
+#define CLK(n) (P33 = (n))
+#define DAT(n) (P32 = (n))
+#define DAT_GET() (P32)
 #define CSN(n)  (P54 = (n))
 
 static void _SpiWriteByte(uint8 c);
@@ -70,7 +70,13 @@ static uint8 _SpiReadByte(void);
 
 // SPI 函数
 void SpiInit(void) {
+	CSN(0);
+	CSN(1);
+	CLK(0);
+}
 
+static void _spiSleep(void) {
+	for (uint8 i = 0; i < 255; i++);
 }
 
 static void _SpiWriteByte(uint8 c) {
@@ -81,6 +87,7 @@ static void _SpiWriteByte(uint8 c) {
 		DAT(c & 0x80 ? 1 : 0);
 		CLK(1);
 		c <<= 1;
+		_spiSleep();
 	}
 
 	CLK(0);
@@ -96,6 +103,7 @@ static uint8 _SpiReadByte(void) {
 			d |= 1;
 		}
 		CLK(0);
+		_spiSleep();
 	}
 	CLK(0);
 	return d;
@@ -143,6 +151,15 @@ void SpiReads(uint8 cmd, uint8 *data, uint8 len) {
 		--len;
 	}
 	CSN(1);
+}
+
+uint8 SpiGetDataBit(void)
+{
+	return DAT_GET();
+}
+
+void SpiSetDataBit(uint8 bit) {
+	DAT(bit);
 }
 
 // 电源控制（Power Control，Pc）
@@ -197,6 +214,14 @@ void PowerControl_PowerDown(void) {
 
 		break;
 	}
+}
+
+void PowerControl_SoftReset(void) {
+	IAP_CONTR |= SWRST;
+}
+
+void PowerControl_SoftResetToIap(void) {
+	IAP_CONTR |= SWBS | SWRST;
 }
 
 // 7.3 存储器中的特殊参数
