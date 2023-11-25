@@ -10,12 +10,14 @@ void Ci24R1_TX_Mode(void)
 	SpiWrite(CE_OFF,0x00); //CE 拉低，芯片进入待机模式
 	SpiWrite(W_REGISTER(SETUP_AW),      0x03); //设置接收地址宽度为 5 个字节;
 	SpiWrites(W_REGISTER(TX_ADDR),      (uint8_t *)addr, 5);
-	SpiWrite(W_REGISTER(EN_AA),         ENAA_P0 | REG0F_SEL_L_SET(2));
+	SpiWrites(W_REGISTER(RX_ADDR_P0),   (uint8_t*)addr,5);
 	SpiWrite(W_REGISTER(EN_RXADDR),     ERX_P0 | REG0F_SEL_H_SET(2));
+	SpiWrite(W_REGISTER(EN_AA),         ENAA_P0 | REG0F_SEL_L_SET(2));
 	SpiWrite(W_REGISTER(OSC_CAP),       OSC_CAP_SET(0b1011));
-	SpiWrite(W_REGISTER(FEATURE),       0x01);
+	SpiWrite(W_REGISTER(FEATURE),       0);
 	SpiWrite(W_REGISTER(RF_CH),         80);
 	SpiWrite(W_REGISTER(RF_SETUP),      RF_DR_SET(2) | RF_PWR_SET(0));
+	SpiWrite(W_REGISTER(SETUP_RETR),    ARD_SET(500) | ARC_SET(15));
 	SpiWrite(W_REGISTER(CONFIG),        PWR_UP | EN_CRC | CRCO);
 	// uint8_t config = SpiRead(R_REGISTER(CONFIG));
 	// UARTSendFormat("配置寄存器读/写值一样? %d, %d\r\n", config, (PWR_UP | EN_CRC | CRCO));
@@ -33,7 +35,7 @@ uint8_t Ci24R1_TxPacket(void)
 	}
 	SpiWrite(CE_OFF,0x00);
 	SpiWrite(FLUSH_TX,0x00);
-	SpiWrites(W_TX_PAYLOAD_NOACK,user_data,4); //写 TX FIFO
+	SpiWrites(W_TX_PAYLOAD ,user_data,4); //写 TX FIFO
 	SpiWrite(CE_ON,0x00); //CE 拉高，Ci24R1 开始发射 HAL_Delay(10); //等待数据发送完成
 						  //
 	while(1) {
@@ -47,6 +49,8 @@ uint8_t Ci24R1_TxPacket(void)
 			continue;
 		} else if(status & MAX_RT) {
 			UARTSendFormat("达到最大重发次数\r\n");
+			// § 4.2.1 ACK 模式
+			// MAX_RT 中断在清除之前不能进行下一步的数据发送
 			SpiWrite(W_REGISTER(STATUS), status | MAX_RT);
 			break;
 		} else if(status & TX_DS) {
@@ -67,10 +71,10 @@ void Ci24R1_RxMode(void) {
 	SpiWrite(W_REGISTER(SETUP_AW),      0x03);
 	SpiWrites(W_REGISTER(RX_ADDR_P0),   (uint8_t*)addr,5);
 	SpiWrite(W_REGISTER(RX_PW_P0),      4);
-	SpiWrite(W_REGISTER(EN_AA),         ENAA_P0 | REG0F_SEL_L_SET(2));
 	SpiWrite(W_REGISTER(EN_RXADDR),     ERX_P0 | REG0F_SEL_H_SET(2));
+	SpiWrite(W_REGISTER(EN_AA),         ENAA_P0 | REG0F_SEL_L_SET(2));
 	SpiWrite(W_REGISTER(OSC_CAP),       OSC_CAP_SET(0b1011));
-	SpiWrite(W_REGISTER(FEATURE),       0x01);
+	SpiWrite(W_REGISTER(FEATURE),       EN_DYN_ACK);
 	SpiWrite(W_REGISTER(RF_CH),         80);
 	SpiWrite(W_REGISTER(RF_SETUP),      RF_DR_SET(2) | RF_PWR_SET(0));
 	SpiWrite(W_REGISTER(CONFIG),        (PWR_UP | EN_CRC | CRCO | PRIM_RX));

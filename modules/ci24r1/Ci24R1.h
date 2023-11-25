@@ -8,6 +8,7 @@
 #define CE_OFF              0x71
 #define SELSPI              0x74 // 选择 DATA 引脚为 SPI 功能
 #define SELIRQ              0x75 // 选择 DATA 引脚为输出 IRQ 值
+#define W_TX_PAYLOAD        0xA0 // 写发射负载数据
 #define W_TX_PAYLOAD_NOACK  0xB0
 #define FLUSH_TX            0xE1
 #define FLUSH_RX            0xE2
@@ -32,6 +33,15 @@
 	#define REG0F_SEL_H_SET(n)  ((n##u & 0x0C) << 6)
 
 #define SETUP_AW        0x03
+
+#define SETUP_RETR      0x04    // 自动重发配置
+	#define ARD         0xF0    // 自动重发延时配置
+	#define ARC         0x0F    // 最大自动重发次数
+								// 自动重发延时：[250us, 500us, ..., 4000us]
+	#define ARD_SET(us)         (((us##u / 250 - 1) & 0x0F) << 4)
+								// 最大自动重发次数
+	#define ARC_SET(times)      (times##u & 0x0F)
+
 #define RF_CH           0x05
 #define RF_SETUP        0x06
 	#define RF_DR_LOW   0x20
