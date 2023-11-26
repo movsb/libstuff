@@ -1,5 +1,5 @@
 #include "Ci24R1.h"
-#include "stc.h"
+#include <stc51/stc.h>
 
 static const uint8_t addr[5] = {1,2,3,4,5};
 static uint8 user_data[4] = {0x00, 0x00, 0x00, 0x00};
@@ -19,8 +19,6 @@ void Ci24R1_TX_Mode(void)
 	SpiWrite(W_REGISTER(RF_SETUP),      RF_DR_SET(2) | RF_PWR_SET(0));
 	SpiWrite(W_REGISTER(SETUP_RETR),    ARD_SET(500) | ARC_SET(15));
 	SpiWrite(W_REGISTER(CONFIG),        PWR_UP | EN_CRC | CRCO);
-	// uint8_t config = SpiRead(R_REGISTER(CONFIG));
-	// UARTSendFormat("配置寄存器读/写值一样? %d, %d\r\n", config, (PWR_UP | EN_CRC | CRCO));
 	SpiWrite(CE_ON, 0x00);
 }
 
@@ -78,11 +76,6 @@ void Ci24R1_RxMode(void) {
 	SpiWrite(W_REGISTER(RF_CH),         80);
 	SpiWrite(W_REGISTER(RF_SETUP),      RF_DR_SET(2) | RF_PWR_SET(0));
 	SpiWrite(W_REGISTER(CONFIG),        (PWR_UP | EN_CRC | CRCO | PRIM_RX));
-	// uint8_t config = SpiRead(R_REGISTER(CONFIG));
-	// UARTSendFormat("配置寄存器读/写值一样? %d, %d\r\n", config, 0x0F);
-	// sleep();
-	// sleep();
-	// sleep();
 	SpiWrite(CE_ON,0x00);
 }
 

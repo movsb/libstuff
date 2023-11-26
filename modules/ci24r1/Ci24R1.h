@@ -65,3 +65,6 @@
 #define FEATURE         0x1D
 	#define EN_DYN_ACK  0x01    // 使能命令W_TX_PAYLOAD_NOACK
 	#define EN_DPL      0x04    // 使能动态负载长度
+
+void Ci24R1_TX_Mode(void);
+uint8_t Ci24R1_TxPacket(void);
