@@ -10,11 +10,15 @@ static void Ci24R1_RX_Mode(ci24r1_config_t *c);
 extern void UARTSendString(const int8_t *str);
 extern void UARTSendFormat(const int8_t *format, ...);
 
+// 判断发送是否处于空闲状态，如果 pending，则表示有数据等待发送。
+static uint8_t ci24r1_pending_send(ci24r1_config_t *config);
+
 uint8_t ci24r1_online(ci24r1_config_t *c) {
 	ci24r1_sel_spi(c);
-	uint8_t status = spi_read(c->spi, R_REGISTER(STATUS));
-	// TODO 使用 0 和 1 共同判断，而不止是最高位
-	return (status & 0x80) == 0;
+	uint8_t input = EN_DYN_ACK | EN_ACK_PAY | EN_DPL;
+	spi_write(c->spi, W_REGISTER(FEATURE), input);
+	uint8_t output = spi_read(c->spi, R_REGISTER(FEATURE));
+	return output == input;
 }
 
 void ci24r1_mode(ci24r1_config_t *c, ci24r1_mode_t mode) {
@@ -48,50 +52,52 @@ void Ci24R1_TX_Mode(ci24r1_config_t *c)
 	spi_write(spi, CE_ON, 0x00);
 }
 
-uint8_t ci24r1_send(ci24r1_config_t *c, const uint8_t *data, uint8_t len) {
+ci24r1_send_status_t ci24r1_send(ci24r1_config_t *c, const uint8_t *data, uint8_t len, uint8_t wait) {
 	spi_config_t *spi = c->spi;
 
-	uint8_t *data2 = (uint8_t*)data;
-	// TODO remove
-	if (++data2[3]== 0) {
-		if (++data2[2] == 0) {
-			if (++data2[1] == 0) {
-				++data2[0];
-			}
-		}
+	while (wait && ci24r1_pending_send(c)) {
+		// 忙等！
 	}
 
-	spi_write(spi, CE_OFF,0x00);
-	spi_write(spi, FLUSH_TX,0x00);
-	spi_write_multi(spi, W_TX_PAYLOAD ,data, len); //写 TX FIFO
-	spi_write(spi, CE_ON,0x00); //CE 拉高，Ci24R1 开始发射 HAL_Delay(10); //等待数据发送完成
-						  //
-	while(1) {
-		uint8_t status=spi_read(spi, R_REGISTER(STATUS));
-		if ((status & 0x80) != 0) {
-			UARTSendFormat("状态寄存器读数错误：%d\r\n", status);
-			return 255;
-		}
-		if (status & TX_FULL) {
-			UARTSendFormat("发送数据满了: status=%d\r\n", status);
-			continue;
-		} else if(status & MAX_RT) {
-			UARTSendFormat("达到最大重发次数\r\n");
-			// § 4.2.1 ACK 模式
-			// MAX_RT 中断在清除之前不能进行下一步的数据发送
-			spi_write(spi, W_REGISTER(STATUS), status | MAX_RT);
-			break;
-		} else if(status & TX_DS) {
-			UARTSendFormat("数据发送完成: %02X %02X %02X %02X\r\n", data[0], data[1], data[2], data[3]);
-			spi_write(spi, W_REGISTER(STATUS), status);
-			break;
-		} else {
-			UARTSendFormat("循环发送中: %d\r\n", status);
-		}
+	// spi_write(spi, CE_OFF,0x00);
+	// spi_write(spi, FLUSH_TX,0x00);
+	// 注意状态：写此寄存器必须不能在有数据正在发送的时候。
+	// 所以：
+	// 1. 本次发送前，等待 pending_send 返回 false
+	// 2. 上一次调用 send 后，等待发送完
+	spi_write_multi(spi, W_TX_PAYLOAD, data, len);
+
+	if (!wait) {
+		return CI24R1_SEND_STATUS_ASYNC;
+	}
+
+keep_waiting:
+	uint8_t status=spi_read(spi, R_REGISTER(STATUS));
+	if ((status & 0x80) != 0) {
+		UARTSendFormat("状态寄存器读数错误：%d\r\n", status);
+		return CI24R1_SEND_STATUS_FAIL;
+	}
+
+	// 因为总是在发送模式下写数据，所以不存在满的情况？
+	// if (status & TX_FULL) {
+	// 	UARTSendFormat("发送数据满了: status=%d\r\n", status);
+	// 	return 0;
+	// }
+	
+	if(status & MAX_RT) {
+		UARTSendFormat("达到最大重发次数\r\n");
+		// § 4.2.1 ACK 模式
+		// MAX_RT 中断在清除之前不能进行下一步的数据发送
+		// TODO 交给用户决定要不要自动清除
+		spi_write(spi, W_REGISTER(STATUS), status | MAX_RT);
+		spi_write(spi, FLUSH_TX, 0);
+		return CI24R1_SEND_STATUS_MAX_RT;
+	} else if(status & TX_DS) {
+		spi_write(spi, W_REGISTER(STATUS), status | TX_DS);
+		return CI24R1_SEND_STATUS_OK;
 	}
 	
-	// UARTSendString("退出发送\r\n");
-	return 0xff;
+	goto keep_waiting;
 }
 
 void Ci24R1_RX_Mode(ci24r1_config_t *c) {
@@ -114,26 +120,24 @@ uint8_t ci24r1_recv(ci24r1_config_t *c, uint8_t *data, uint8_t *len) {
 	uint8_t status = spi_read(c->spi, R_REGISTER(STATUS));
 	if ((status & 0x80) != 0) {
 		UARTSendFormat("状态寄存器读数错误：%d\r\n", status);
-		goto on;
+		return 1;
 	}
 	//  UARTSendFormat("Status: %d\r\n",status);
-	if(status & RX_DR) {
-		if (RX_P_NO_GET(status) > 5) {
-			// UARTSendFormat("RX FIFO 为空或不可用\r\n");
-			goto on;
-		}
-		spi_read_multi(c->spi, R_RX_PAYLOAD, data, *len);
-		UARTSendFormat("读取 %d 字节，数据：%02X %02X %02X %02X，来源于管道号：%d\r\n",
-		 *len, data[0], data[1], data[2], data[3], RX_P_NO_GET(status));
-		// spi_write(spi, FLUSH_RX,0x00);
-		// spi_write(spi, W_REGISTER(STATUS), status | RX_DR);
-	} else {
+	if(!(status & RX_DR)) {
 		UARTSendFormat("Status: %02X\r\n", status);
+		return 0;
 	}
-	// spi_write(spi, W_REGISTER(STATUS), status | RX_DR);
-	// spi_write(spi, FLUSH_RX,0x00);
-on:
-	return 1;
+	if (RX_P_NO_GET(status) > 5) {
+		// 这里有个异步问题：清除 RX_DR 的时候，如果此时此刻接收到了数据怎么办？
+		// 会导致收到的数据不会产生中断标记。所以本质上是不是不应该启用自动 ACK，
+		// 而总是接收成功之后手动 ACK？
+		spi_write(c->spi, W_REGISTER(STATUS), status | RX_DR);
+		// UARTSendFormat("RX FIFO 为空或不可用\r\n");
+		return 0;
+	}
+	spi_read_multi(c->spi, R_RX_PAYLOAD, data, *len);
+	UARTSendFormat("读取 %d 字节，数据：%02X %02X %02X %02X，来源于管道号：%d\r\n",
+	 *len, data[0], data[1], data[2], data[3], RX_P_NO_GET(status));
 }
 
 void ci24r1_sel_spi(ci24r1_config_t *c) {
@@ -147,4 +151,9 @@ void ci24r1_sel_irq(ci24r1_config_t *c) {
 uint8_t ci24r1_irq(ci24r1_config_t *c) {
 	// TODO 不应该使用 spi 的内部定义
 	return c->spi->miso() == 0;
+}
+
+uint8_t ci24r1_pending_send(ci24r1_config_t *c) {
+	uint8_t status = spi_read(c->spi, R_REGISTER(FIFO_STATUS));
+	return !(status & TX_EMPTY);
 }

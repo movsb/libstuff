@@ -62,10 +62,14 @@
 	#define OSC_CAP_SET(n)      (n##u << 4)
 #define TX_ADDR         0x10
 #define RX_PW_P0        0x11
+
 #define FIFO_STATUS     0x17
+#define TX_EMPTY        0x10    // TX FIFO空标志
+
 #define FEATURE         0x1D
-	#define EN_DYN_ACK  0x01    // 使能命令W_TX_PAYLOAD_NOACK
-	#define EN_DPL      0x04    // 使能动态负载长度
+#define EN_DYN_ACK      0x01    // 使能命令W_TX_PAYLOAD_NOACK
+#define EN_ACK_PAY      0x02    // 使能ACK负载(带负载数据的ACK包)
+#define EN_DPL          0x04    // 使能动态负载长度
 
 typedef struct {
 	spi_config_t *spi;
@@ -76,12 +80,22 @@ typedef enum {
 	CI24R1_MODE_RX,
 } ci24r1_mode_t;
 
+typedef enum {
+	CI24R1_SEND_STATUS_OK   = 0,    // 发送成功
+	CI24R1_SEND_STATUS_ASYNC,       // wait=false 的情况下，异步发送中
+	CI24R1_SEND_STATUS_FAIL,        // 通用错误，比如设备不在线？
+	CI24R1_SEND_STATUS_MAX_RT,      // 发送失败，到达最大发送次数
+} ci24r1_send_status_t;
+
 // 会自动切换到 SPI 模式。
 uint8_t ci24r1_online(ci24r1_config_t *config);
 void ci24r1_mode(ci24r1_config_t *config, ci24r1_mode_t mode);
-uint8_t ci24r1_send(ci24r1_config_t *config, const uint8_t *data, uint8_t len);
+// 发送数据。
+// 不建议在非发送模式下操作（比如待机状态下，虽然模块本身允许，但是接口实现会偏复杂，尚未支持）。
+ci24r1_send_status_t ci24r1_send(ci24r1_config_t *config, const uint8_t *data, uint8_t len, uint8_t wait);
 uint8_t ci24r1_recv(ci24r1_config_t *config, uint8_t *data, uint8_t *len);
 void ci24r1_sel_spi(ci24r1_config_t *config);
 // 如果不需要了，必须手动设置回 SPI 模式。
 void ci24r1_sel_irq(ci24r1_config_t *config);
+// 返回 1(true) 表示进入了中断，不表示低电平。
 uint8_t ci24r1_irq(ci24r1_config_t *config);
