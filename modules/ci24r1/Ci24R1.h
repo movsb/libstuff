@@ -65,6 +65,8 @@
 
 #define FIFO_STATUS     0x17
 #define TX_EMPTY        0x10    // TX FIFO空标志
+#define FIFO_STATUS_TX_FULL     0x20
+#define FIFO_STATUS_TX_EMPTY    0x10
 
 #define FEATURE         0x1D
 #define EN_DYN_ACK      0x01    // 使能命令W_TX_PAYLOAD_NOACK
@@ -85,6 +87,7 @@ typedef enum {
 	CI24R1_SEND_STATUS_ASYNC,       // wait=false 的情况下，异步发送中
 	CI24R1_SEND_STATUS_FAIL,        // 通用错误，比如设备不在线？
 	CI24R1_SEND_STATUS_MAX_RT,      // 发送失败，到达最大发送次数
+	CI24R1_SEND_STATUS_FULL,        // 发送队列满了，不使用
 } ci24r1_send_status_t;
 
 // 会自动切换到 SPI 模式。
