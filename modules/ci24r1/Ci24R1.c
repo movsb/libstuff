@@ -50,7 +50,7 @@ void Ci24R1_TX_Mode(ci24r1_config_t *c)
 	spi_write(spi, W_REGISTER(FEATURE),       0);
 	spi_write(spi, W_REGISTER(RF_CH),         80);
 	spi_write(spi, W_REGISTER(RF_SETUP),      RF_DR_SET(2) | RF_PWR_SET(0));
-	spi_write(spi, W_REGISTER(SETUP_RETR),    ARD_SET(2000) | ARC_SET(15));
+	spi_write(spi, W_REGISTER(SETUP_RETR),    ARD_SET(4000) | ARC_SET(15));
 	spi_write(spi, W_REGISTER(CONFIG),        PWR_UP | EN_CRC | CRCO);
 	spi_write(spi, FLUSH_TX,                  0);
 	spi_write(spi, CE_ON, 0x00);

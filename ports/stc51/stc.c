@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 
 #define __STC_STC8G1K08A__
 #define FOSC 11059200UL
@@ -120,6 +121,14 @@ void PowerControl_SoftReset(void) {
 
 void PowerControl_SoftResetToIap(void) {
 	IAP_CONTR |= SWBS | SWRST;
+}
+
+void PowerControl_EnableWatchDogTimer(uint8_t wdtPS) {
+	WDT_CONTR = EN_WDT | (wdtPS & WDT_PS);
+}
+
+void PowerControl_ClearWatchDogTimer(void) {
+	WDT_CONTR |= CLR_WDT;
 }
 
 // 7.3 存储器中的特殊参数
