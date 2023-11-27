@@ -1,7 +1,7 @@
 #include "Ci24R1.h"
 #include <spi/spi.h>
 
-static const uint8_t __code addr[5] = {1,2,3,4,5};
+static const uint8_t __code addr[4] = {1,2,3,4};
 
 static void Ci24R1_TX_Mode(ci24r1_config_t *c);
 static void Ci24R1_RX_Mode(ci24r1_config_t *c);
@@ -41,9 +41,9 @@ void Ci24R1_TX_Mode(ci24r1_config_t *c)
 {
 	spi_config_t *spi = c->spi;
 	spi_write(spi, CE_OFF,0x00);
-	spi_write(spi, W_REGISTER(SETUP_AW),            0x03);
-	spi_write_multi(spi, W_REGISTER(TX_ADDR),      (uint8_t *)addr, 5);
-	spi_write_multi(spi, W_REGISTER(RX_ADDR_P0),   (uint8_t*)addr,5);
+	spi_write(spi, W_REGISTER(SETUP_AW),            0b10);
+	spi_write_multi(spi, W_REGISTER(TX_ADDR),      (uint8_t *)addr, 4);
+	spi_write_multi(spi, W_REGISTER(RX_ADDR_P0),   (uint8_t*)addr,4);
 	spi_write(spi, W_REGISTER(EN_RXADDR),     ERX_P0 | REG0F_SEL_H_SET(2));
 	spi_write(spi, W_REGISTER(EN_AA),         ENAA_P0 | REG0F_SEL_L_SET(2));
 	spi_write(spi, W_REGISTER(OSC_CAP),       OSC_CAP_SET(0b1011));
@@ -113,8 +113,8 @@ keep_waiting:
 void Ci24R1_RX_Mode(ci24r1_config_t *c) {
 	spi_config_t *spi = c->spi;
 	spi_write(spi, CE_OFF,0x00);
-	spi_write(spi, W_REGISTER(SETUP_AW),      0x03);
-	spi_write_multi(spi, W_REGISTER(RX_ADDR_P0),   (uint8_t*)addr,5);
+	spi_write(spi, W_REGISTER(SETUP_AW),      0b10);
+	spi_write_multi(spi, W_REGISTER(RX_ADDR_P0),   (uint8_t*)addr,4);
 	spi_write(spi, W_REGISTER(RX_PW_P0),      4);
 	spi_write(spi, W_REGISTER(EN_RXADDR),     ERX_P0 | REG0F_SEL_H_SET(2));
 	spi_write(spi, W_REGISTER(EN_AA),         ENAA_P0 | REG0F_SEL_L_SET(2));
