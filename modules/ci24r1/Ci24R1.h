@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <spi/spi.h>
 
 #define R_RX_PL_WID         0x60
 #define R_RX_PAYLOAD        0x61
@@ -66,5 +67,21 @@
 	#define EN_DYN_ACK  0x01    // 使能命令W_TX_PAYLOAD_NOACK
 	#define EN_DPL      0x04    // 使能动态负载长度
 
-void Ci24R1_TX_Mode(void);
-uint8_t Ci24R1_TxPacket(void);
+typedef struct {
+	spi_config_t *spi;
+} ci24r1_config_t;
+
+typedef enum {
+	CI24R1_MODE_TX,
+	CI24R1_MODE_RX,
+} ci24r1_mode_t;
+
+// 会自动切换到 SPI 模式。
+uint8_t ci24r1_online(ci24r1_config_t *config);
+void ci24r1_mode(ci24r1_config_t *config, ci24r1_mode_t mode);
+uint8_t ci24r1_send(ci24r1_config_t *config, const uint8_t *data, uint8_t len);
+uint8_t ci24r1_recv(ci24r1_config_t *config, uint8_t *data, uint8_t *len);
+void ci24r1_sel_spi(ci24r1_config_t *config);
+// 如果不需要了，必须手动设置回 SPI 模式。
+void ci24r1_sel_irq(ci24r1_config_t *config);
+uint8_t ci24r1_irq(ci24r1_config_t *config);
