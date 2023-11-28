@@ -169,6 +169,11 @@ void PowerControl_EnableWatchDogTimer(uint8_t wdtPS);
 void PowerControl_ClearWatchDogTimer(void);
 
 // 7.3 存储器中的特殊参数
+// 全球唯一 ID 号 
+const uint8_t* Flash_GetGuid(void);
+
+// 使用芯片全球唯一 ID 生成的随机数
+void GenRandom(uint8_t *buf, uint8_t len);
 
 
 #endif // __STC_H__

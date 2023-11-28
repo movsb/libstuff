@@ -44,6 +44,9 @@
 	#define ARC_SET(times)      (times##u & 0x0F)
 
 #define RF_CH           0x05
+#define RF_CH_ID(n)     (n)
+#define RF_CH_FREQ(mhz) (mhz - 2400)
+
 #define RF_SETUP        0x06
 	#define RF_DR_LOW   0x20
 	#define RF_DR_HIGH  0x04
@@ -59,14 +62,17 @@
 #define RX_ADDR_P0      0x0A
 #define RX_ADDR_P2      0x0C
 #define OSC_CAP         0x0F        // 0F_2
-	#define OSC_CAP_SET(n)      (n##u << 4)
+	#define OSC_CAP_SET(n)      (n << 4)
 #define TX_ADDR         0x10
-#define RX_PW_P0        0x11
+#define RX_PW_P0        0x11    // 接收数据管道0数据字节数 [1,32]
 
 #define FIFO_STATUS     0x17
 #define TX_EMPTY        0x10    // TX FIFO空标志
 #define FIFO_STATUS_TX_FULL     0x20
 #define FIFO_STATUS_TX_EMPTY    0x10
+
+#define DYNPD           0x1C    // 使能动态负载长度
+	#define DPL_P0      0x01    // 使能接收管道0动态负载长度(需 EN_DPL及ENAA_P0)。
 
 #define FEATURE         0x1D
 #define EN_DYN_ACK      0x01    // 使能命令W_TX_PAYLOAD_NOACK
@@ -75,6 +81,15 @@
 
 typedef struct {
 	spi_config_t *spi;
+	uint8_t addr_len;   // 地址长度：3、4、5
+
+	// 寄存器内存备份，非位一一对应
+	uint8_t en_aa;
+	uint8_t en_rxaddr;
+	uint8_t cap;        // 电容
+	uint8_t rf_ch_id;
+
+	uint8_t _config;
 } ci24r1_config_t;
 
 typedef enum {
@@ -90,15 +105,35 @@ typedef enum {
 	CI24R1_SEND_STATUS_FULL,        // 发送队列满了，不使用
 } ci24r1_send_status_t;
 
+// 初始化 config 的内容。
+void ci24r1_init_config(ci24r1_config_t *config);
+
+// 模块根据 config 初始化。
+void ci24r1_init(ci24r1_config_t *config);
+void ci24r1_shutdown(ci24r1_config_t *config, uint8_t yes);
+void ci24r1_standby(ci24r1_config_t *config, uint8_t yes);
+
 // 会自动切换到 SPI 模式。
 uint8_t ci24r1_online(ci24r1_config_t *config);
 void ci24r1_mode(ci24r1_config_t *config, ci24r1_mode_t mode);
 // 发送数据。
 // 不建议在非发送模式下操作（比如待机状态下，虽然模块本身允许，但是接口实现会偏复杂，尚未支持）。
 ci24r1_send_status_t ci24r1_send(ci24r1_config_t *config, const uint8_t *data, uint8_t len, uint8_t wait);
+// 接收数据。
+// 缓冲区大小应该 >= 32 字节。
 uint8_t ci24r1_recv(ci24r1_config_t *config, uint8_t *data, uint8_t *len);
 void ci24r1_sel_spi(ci24r1_config_t *config);
 // 如果不需要了，必须手动设置回 SPI 模式。
 void ci24r1_sel_irq(ci24r1_config_t *config);
 // 返回 1(true) 表示进入了中断，不表示低电平。
 uint8_t ci24r1_irq(ci24r1_config_t *config);
+
+typedef struct {
+	uint8_t *addr;          // 长度必须为 ci24r1_config_t.addr_len
+	uint8_t payload_width;  // 接收数据长度，定长
+	uint8_t auto_ack;       // 自动应答？
+} ci24r1_channel_config_t;
+
+// 只允许配置通道0
+void ci24r1_config_channel(ci24r1_config_t *config, uint8_t n, const ci24r1_channel_config_t* cc);
+void ci24r1_enable_channel(ci24r1_config_t *config, uint8_t n, uint8_t enable);

@@ -133,6 +133,31 @@ void PowerControl_ClearWatchDogTimer(void) {
 
 // 7.3 存储器中的特殊参数
 #ifdef __STC_STC8G1K08A__
-	#define STC_UUID_ADDR   0x1FF9 // 7 个字节
+	#define STC_GUID_ADDR   0x1FF9 // 7 个字节
 #endif
 
+// const uint8_t* Flash_GetGuid(void) {
+// 	return (const uint8_t __code*)(STC_GUID_ADDR);
+// }
+
+// 用线性同余随机生成的随机数。
+// 系数是任意选的
+static uint8_t seed_inited = 0;
+static uint16_t seed;
+void GenRandom(uint8_t *buf, uint8_t len) {
+	// if (!seed_inited) {
+	// 	const uint8_t *guid = Flash_GetGuid();
+	// 	for (uint8_t i = 0; i < 6; i+=2) {
+	// 		seed ^= *(uint16_t*)&guid[i];
+	// 	}
+	// 	seed ^= guid[6];
+	// 	seed_inited = 1;
+	// 	// UARTSendFormat("GUID: %02X %02X %02X\r\n", guid[0], guid[1], guid[2]);
+	// }
+
+	// for (uint8_t i = 0; i < len; i++) {
+	// 	seed *= 31;
+	// 	seed += 71;
+	// 	buf[i] = seed % 255;
+	// }
+}

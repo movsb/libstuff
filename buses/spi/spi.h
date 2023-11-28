@@ -18,3 +18,7 @@ void    spi_write(spi_config_t *c, uint8_t cmd, uint8_t value);
 void    spi_write_multi(spi_config_t *c, uint8_t cmd, const uint8_t *data, uint8_t len);
 uint8_t spi_read(spi_config_t *c, uint8_t cmd);
 void    spi_read_multi(spi_config_t *c, uint8_t cmd, uint8_t *data, uint8_t len);
+
+// 内部使用，供测试
+void    spi_write_byte(spi_config_t *config, uint8_t value);
+uint8_t spi_read_byte(spi_config_t *config);
