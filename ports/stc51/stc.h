@@ -52,8 +52,14 @@ SFR(PCON,   0x87);
 	#define SMOD    0x80
 
 SFR(TCON,   0x88);
-	SBIT(TR1,   0x88,   6);
+	SBIT(IT0,   0x88,   0);
+	SBIT(IE0,   0x88,   1);
 	SBIT(IT1,   0x88,   2); // 外部中断源1触发控制位。
+	SBIT(IE1,   0x88,   3);
+	SBIT(TR0,   0x88,   4);
+	SBIT(TF0,   0x88,   5);
+	SBIT(TR1,   0x88,   6);
+
 SFR(TMOD,   0x89);
 SFR(TL1,    0x8B);
 SFR(TH1,    0x8D);
@@ -71,6 +77,7 @@ SFR(SCON,   0x98);
 SFR(SBUF,   0x99);
 
 SFR(IE,     0xA8);
+	SBIT(ET0,   0xA8,   1);
 	SBIT(EX1,   0xA8,   2);
 	SBIT(ET1,   0xA8,   3);
 	SBIT(ES,    0xA8,   4);
@@ -92,6 +99,9 @@ SFR(WDT_CONTR,      0xC1);
 #define EN_WDT      0x20    // 1：启动看门狗定时器。
 #define CLR_WDT     0x10    // 1：清零看门狗定时器，自动复位
 #define WDT_PS      0x07    // 分频系数
+
+SFR(TL0,    0x8A);
+SFR(TH0,    0x8C);
 
 SFR(IAP_CONTR,      0xC7);
 	#define SWBS    0x40 // 复位后进入 IAP
@@ -159,6 +169,8 @@ uint16 PowerControl_GetWakeupTimerClockFrequency(void);
 
 // 进入掉电模式。
 void PowerControl_PowerDown(void);
+// 进入空闲模式。
+void PowerControl_Idle(void);
 // 复位
 void PowerControl_SoftReset(void);
 // 复位到下载模式
@@ -167,6 +179,11 @@ void PowerControl_SoftResetToIap(void);
 void PowerControl_EnableWatchDogTimer(uint8_t wdtPS);
 // 访问（清空）看门狗定时器
 void PowerControl_ClearWatchDogTimer(void);
+// 获取系统复位原因
+// typedef enum {
+// 	POWER_RESET_REASON_POWER_ON = 0,    // 上电
+
+// } ResetReason;
 
 // 7.3 存储器中的特殊参数
 // 全球唯一 ID 号 
