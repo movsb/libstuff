@@ -7,7 +7,9 @@
                 "/Users/tao/code/espressif/esp-homekit-sdk/**",
                 "/Users/tao/code/espressif/esp-idf/components/newlib/platform_include",
                 "${workspaceFolder}/**",
-                "/Users/tao/code/circuits/playground/build/config"
+                "/Users/tao/code/circuits/playground/build/config",
+                "${workspaceFolder}/modules/displays",
+                "/Users/tao/code/espressif/esp-idf/components/freertos/FreeRTOS-Kernel/include"
             ],
             "defines": [
                 "CONFIG_IDF_TARGET_ESP32C3",
