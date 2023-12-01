@@ -4,6 +4,7 @@
             "name": "ESP32-C3",
             "includePath": [
                 "/Users/tao/code/espressif/esp-idf/**",
+                "/Users/tao/code/espressif/esp-homekit-sdk/**",
                 "/Users/tao/code/espressif/esp-idf/components/newlib/platform_include",
                 "${workspaceFolder}/**",
                 "/Users/tao/code/circuits/playground/build/config"

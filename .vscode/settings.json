@@ -1,8 +1,20 @@
 {
 	"cSpell.words": [
+		"homekit",
 		"LOGI",
 		"LOGW",
 		"SNTP",
 		"ssid"
-	]
+	],
+	"files.associations": {
+		"stdint.h": "c",
+		"tuple": "cpp",
+		"cstring": "cpp",
+		"*.inc": "cpp",
+		"limits": "cpp",
+		"ranges": "cpp",
+		"*.tcc": "cpp",
+		"compare": "cpp",
+		"random": "cpp"
+	}
 }
