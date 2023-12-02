@@ -34,6 +34,12 @@ void ci24r1_init(ci24r1_config_t *c) {
 
 	spi_write(c->spi, W_REGISTER(RF_SETUP),     RF_DR_SET(2) | RF_PWR_SET(0));
 	spi_write(c->spi, W_REGISTER(CONFIG),       c->_config);
+
+	// 发送方的
+	spi_write_multi(c->spi, W_REGISTER(TX_ADDR),       (uint8_t *)addr, 4);
+	spi_write_multi(c->spi, W_REGISTER(RX_ADDR_P0),    (uint8_t*)addr,4);
+	spi_write(c->spi, W_REGISTER(SETUP_RETR),             ARD_SET(4000) | ARC_SET(15));
+	spi_write(c->spi, FLUSH_TX,                        0);
 }
 
 // 判断发送是否处于空闲状态，如果 pending，则表示有数据等待发送。
@@ -60,25 +66,6 @@ void ci24r1_mode(ci24r1_config_t *c, ci24r1_mode_t mode) {
 			break;
 	}
 	spi_write(c->spi, W_REGISTER(CONFIG), c->_config);
-}
-
-void Ci24R1_TX_Mode(ci24r1_config_t *c)
-{
-	spi_config_t *spi = c->spi;
-	spi_write(spi, CE_OFF,0x00);
-	spi_write(spi, W_REGISTER(FEATURE),             0);
-	spi_write(spi, W_REGISTER(SETUP_AW),            0b10);
-	spi_write_multi(spi, W_REGISTER(TX_ADDR),       (uint8_t *)addr, 4);
-	spi_write_multi(spi, W_REGISTER(RX_ADDR_P0),    (uint8_t*)addr,4);
-	spi_write(spi, W_REGISTER(EN_RXADDR),           ERX_P0 | REG0F_SEL_H_SET(2));
-	spi_write(spi, W_REGISTER(EN_AA),               ENAA_P0 | REG0F_SEL_L_SET(2));
-	spi_write(spi, W_REGISTER(OSC_CAP),             OSC_CAP_SET(0b1011u));
-	spi_write(spi, W_REGISTER(RF_CH),               80);
-	spi_write(spi, W_REGISTER(RF_SETUP),            RF_DR_SET(2) | RF_PWR_SET(0));
-	spi_write(spi, W_REGISTER(SETUP_RETR),          ARD_SET(4000) | ARC_SET(15));
-	spi_write(spi, W_REGISTER(CONFIG),              PWR_UP | EN_CRC | CRCO);
-	spi_write(spi, FLUSH_TX,                        0);
-	spi_write(spi, CE_ON, 0x00);
 }
 
 ci24r1_send_status_t ci24r1_send(ci24r1_config_t *c, const uint8_t *data, uint8_t len, uint8_t wait) {
@@ -130,6 +117,8 @@ keep_waiting:
 	} else if(status & TX_DS) {
 		spi_write(spi, W_REGISTER(STATUS), status | TX_DS);
 		return CI24R1_SEND_STATUS_OK;
+	} else {
+		UARTSendFormat("继续发送中，status=%d\r\n", status);
 	}
 	
 	goto keep_waiting;
@@ -203,7 +192,7 @@ void ci24r1_config_channel(ci24r1_config_t *c, uint8_t n, const ci24r1_channel_c
 
 void ci24r1_enable_channel(ci24r1_config_t *c, uint8_t n, uint8_t enable) {
 	uint8_t mask = ERX_P0 << n;
-	if(enable)  { c->en_rxaddr | mask; }
+	if(enable)  { c->en_rxaddr |= mask; }
 	else        { c->en_rxaddr &= ~mask; }
 	spi_write(c->spi, W_REGISTER(EN_RXADDR), c->en_rxaddr);
 }
