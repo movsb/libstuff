@@ -69,4 +69,4 @@ ci24r1_status_t ci24r1_send(ci24r1_config_t *config, const uint8_t *data, uint8_
 
 // 接收数据。
 // 数据的长度必须是 config_rx_channel 时的 payload_width 大小，否则行为不可预期。 
-uint8_t ci24r1_recv(ci24r1_config_t *config, uint8_t *data, uint8_t len);
+ci24r1_status_t ci24r1_recv(ci24r1_config_t *config, uint8_t *data, uint8_t len);

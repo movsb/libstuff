@@ -105,6 +105,9 @@ keep_waiting:
 	} else {
 		// UARTSendFormat("继续发送中，status=%d\r\n", status);
 		// TODO 避免死循环？
+		// 会在以下已知情况下出现死循环：
+		// 1. 调用 send 时候并未 power_up = 1 standby = 0，也就是说未进入发送状态。
+		//    本来库实现尽量为了精简，本身也没有几个函数，就未作此检测。
 	}
 	
 	goto keep_waiting;

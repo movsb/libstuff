@@ -3,10 +3,6 @@
 
 #include <stdint.h>
 
-#ifndef __SDCC
-#define __SDCC
-#endif
-
 // TODO
 #define FOSC 11059200UL
 
@@ -14,27 +10,28 @@
 	#error "FOSC is not defined"
 #endif
 
-// 一些基础类型
-// TODO：类型大小检测符合位数。
-typedef signed char         int8;
-typedef signed int          int16;
-typedef signed long         int32;
-
-typedef unsigned char       byte;
-typedef unsigned char       uint8;
-typedef unsigned int        uint16;
-typedef unsigned long       uint32;
-
 // 适用于 SDCC - Small Device C Compiler 的宏定义
 #if defined (SDCC) || defined (__SDCC)
 
 #define SBIT(name, addr, bit)       __sbit  __at(addr+bit)  name
 #define SFR(name, addr)             __sfr   __at(addr)      name
 #define INTERRUPT(vector)           __interrupt (vector)
+#define NOP()                       __asm NOP __endasm
+#define __DATA                      __data
+#define __XDATA                     __xdata
+#define __CODE                      __code
 
-#define NOP() __asm NOP __endasm
+#else // VsCode etc. to omit intellisense warning.
 
-#endif // SDCC
+#define SBIT(name, addr, bit)       volatile uint8_t name
+#define SFR(name, addr)             volatile uint8_t name
+#define INTERRUPT(vector)           //
+#define NOP()                       //
+#define __DATA                      //
+#define __XDATA                     //
+#define __CODE                      //
+
+#endif
 
 // 特殊功能寄存器
 //
@@ -128,27 +125,15 @@ inline void DisableInterrupts(void) {
 	EA = 0;
 }
 
-void UARTInit(uint32 baudrate);
-void UARTSendByte(uint8 byte);
-void UARTSendData(const uint8 *data, uint8 len);
-void UARTSendString(const int8 *str);
-void UARTSendFormat(const int8 *format, ...);
+void UARTInit(uint32_t baudrate);
+void UARTSendByte(uint8_t byte);
+void UARTSendData(const uint8_t *data, uint8_t len);
+void UARTSendString(const int8_t *str);
+void UARTSendFormat(const int8_t *format, ...);
 
 // 中断函数必须要在头文件中声明，否则中断函数不会被执行
 // https://blog.csdn.net/openblog/article/details/72942315
 void UARTHandler(void) INTERRUPT(4);
-
-// SPI
-// 命令和寄存器并不一样，SPI 第一个字节是命令，而命令分读、写寄存器、清空发送数据等。
-// 所以不要认为 spi 读写的都是寄存器。
-void    SpiInit(void);
-void    SpiWrite        (uint8 cmd, uint8 value);
-void    SpiWrites       (uint8 cmd, const uint8 *data, uint8 len);
-uint8   SpiRead         (uint8 cmd);
-void    SpiReads        (uint8 cmd, uint8 *data, uint8 len);
-
-void SpiSetDataBit(uint8 bit);
-uint8 SpiGetDataBit(void);
 
 // 电源控制。
 // 
@@ -163,9 +148,9 @@ SFR(WKTCL,      0xAA);  // 掉电唤醒定时器计数寄存器
 SFR(WKTCH,      0xAB);
 	#define WKTEN       0x80
 
-void PowerControl_EnableWakeupTimer(int16 seconds);
+void PowerControl_EnableWakeupTimer(int16_t seconds);
 void PowerControl_DisableWakeupTimer(void);
-uint16 PowerControl_GetWakeupTimerClockFrequency(void);
+uint16_t PowerControl_GetWakeupTimerClockFrequency(void);
 
 // 进入掉电模式。
 void PowerControl_PowerDown(void);
