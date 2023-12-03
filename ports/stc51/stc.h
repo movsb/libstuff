@@ -3,11 +3,9 @@
 
 #include <stdint.h>
 
-// TODO
-#define FOSC 11059200UL
-
-#ifndef FOSC
-	#error "FOSC is not defined"
+#ifndef __FOSC__
+	#warning 没定义时钟频率
+	#define __FOSC__ 11059200
 #endif
 
 // 适用于 SDCC - Small Device C Compiler 的宏定义
@@ -172,10 +170,7 @@ void PowerControl_ClearWatchDogTimer(void);
 
 // 7.3 存储器中的特殊参数
 // 全球唯一 ID 号 
+#define FLASH_GUID_LENGTH   7
 const uint8_t* Flash_GetGuid(void);
-
-// 使用芯片全球唯一 ID 生成的随机数
-void GenRandom(uint8_t *buf, uint8_t len);
-
 
 #endif // __STC_H__
