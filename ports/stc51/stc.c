@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include "pri.h"
 #include "stc.h"
 
 static volatile int8_t uartBusy;
 
 void UARTInit(uint32_t baudrate) {
-	uint16_t t = 65536 - (uint32_t)(__FOSC__) / baudrate / 4;
+	uint16_t t = 65536 - (uint32_t)(__STC_FOSC__) / baudrate / 4;
 	SCON = 0x50;
 	TL1 = (uint8_t)(t);
 	TH1 = (uint8_t)(t >> 8);
@@ -132,19 +133,6 @@ void PowerControl_EnableWatchDogTimer(uint8_t wdtPS) {
 void PowerControl_ClearWatchDogTimer(void) {
 	WDT_CONTR |= CLR_WDT;
 }
-
-// 7.3 存储器中的特殊参数
-#if defined(__STC_STC8G1K08A__)
-	#define STC_GUID_ADDR   0x1FF9
-#elif defined(__STC_STC8G1K17A__)
-	#define STC_GUID_ADDR   0x43F9
-#else
-	#define STC_GUID_ADDR   0
-#endif
-
-#if STC_GUID_ADDR == 0
-	#warning 需要指定芯片型号，例如：__STC_STC8G1K17A__
-#endif
 
 const uint8_t* Flash_GetGuid(void) {
 	return (const uint8_t __CODE*)(STC_GUID_ADDR);

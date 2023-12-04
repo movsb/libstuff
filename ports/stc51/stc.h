@@ -3,11 +3,6 @@
 
 #include <stdint.h>
 
-#ifndef __FOSC__
-	#warning 没定义时钟频率
-	#define __FOSC__ 11059200
-#endif
-
 // 适用于 SDCC - Small Device C Compiler 的宏定义
 #if defined (SDCC) || defined (__SDCC)
 
@@ -114,6 +109,21 @@ SFR(P6M0,   0xCC);
 SFR(T2H,    0xD6);
 SFR(T2L,    0xD7);
 
+// IAP/EEPROM
+
+SFR(IAP_DATA,   0xC2);
+SFR(IAP_ADDRH,  0xC3);
+SFR(IAP_ADDRL,  0xC4);
+SFR(IAP_CMD,    0xC5);
+	#define IAP_CMD_READ    0b01
+	#define IAP_CMD_WRITE   0b10
+	#define IAP_CMD_ERASE   0b11
+SFR(IAP_TRIG,   0xC6);
+SFR(IAP_CONTR,  0xC7);
+	#define IAPEN           0x80
+	#define CMD_FAIL        0x10
+SFR(IAP_TPS,    0xF5);
+
 // 全局中断相关函数
 inline void EnableInterrupts(void) {
 	EA = 1;
@@ -172,5 +182,14 @@ void PowerControl_ClearWatchDogTimer(void);
 // 全球唯一 ID 号 
 #define FLASH_GUID_LENGTH   7
 const uint8_t* Flash_GetGuid(void);
+
+// IAP & EEPROM
+
+// 不会有人一次性操作 512 字节吧？len 为 uint8_t 应该够了？🤪
+
+// 成功返回非0，失败返回0
+uint8_t EEPROM_Read(uint16_t addr, uint8_t *buf, uint8_t len);
+// 成功返回非0，失败返回0
+uint8_t EEPROM_Write(uint16_t addr, const uint8_t *buf, uint8_t len);
 
 #endif // __STC_H__
