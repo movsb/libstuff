@@ -19,11 +19,15 @@ typedef struct {
 uint8_t ci24r1_init(ci24r1_config_t *config, spi_config_t *spi);
 
 // 模式切换：上电？待机？发送？
-void ci24r1_state(ci24r1_config_t *config, uint8_t power_up, uint8_t standby, uint8_t tx);
+// 组合以下状态：U/u - 上电与否, T - 发送，R - 接收, E/e - 使能（CE_ON/OFF）
+// 例如：UET 表示：上电，发送模式，使能，不用一次性配所有状态
+// 无效的状态被忽略。
+void ci24r1_state(ci24r1_config_t *config, const uint8_t *states);
 
 // 配置发送。
 // 配置发送和配置接收不冲突，可以都配置，方便直接通过 state 函数改变状态。
 // 地址强制为 5 个字节，内部不会缓存 addr 指针。
+// 会自动清空队列。
 void ci24r1_config_tx(ci24r1_config_t *config, const uint8_t *addr);
 
 // 配置接收通道。
@@ -34,6 +38,7 @@ void ci24r1_config_tx(ci24r1_config_t *config, const uint8_t *addr);
 // 配置发送和配置接收不冲突，可以都配置，方便直接通过 state 函数改变状态。
 // 负载长度必须和发送方统一好，并且只支持固定长度。实测动态长度有BUG（拿不到长度信息），代码删除了。
 // 地址强制为 5 个字节，内部不会缓存 addr 指针。
+// 会自动清空队列。
 void ci24r1_config_rx_channel(ci24r1_config_t *config, uint8_t n, uint8_t enable, const uint8_t *addr, uint8_t payload_width, uint8_t auto_ack);
 
 // 判断设备是否在线。

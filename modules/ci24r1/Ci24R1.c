@@ -50,16 +50,31 @@ uint8_t ci24r1_online(ci24r1_config_t *c) {
 }
 
 // 除正在发送数据是不能修改寄存器，其它时候均可以。
-void ci24r1_state(ci24r1_config_t *c, uint8_t power_up, uint8_t standby, uint8_t tx) {
-	if(power_up)    { c->config |=  PWR_UP;     }
-	else            { c->config &= ~PWR_UP;     }
+void ci24r1_state(ci24r1_config_t *c, const uint8_t  *states) {
+	uint8_t config =c->config;
+	int8_t  ce = -1;
+
+	for (uint8_t s; s = *states; ++states) {
+		switch (s) {
+			case 'U': config |=  PWR_UP;    break;
+			case 'u': config &= ~PWR_UP;    break;;
+			case 'T': config &= ~PRIM_RX;   break;
+			case 'R': config |=  PRIM_RX;   break;
+			case 'E': ce = CE_ON;           break;
+			case 'e': ce = CE_OFF;          break;
+		default:
+			break;
+		}
+	}
 	
-	if (tx)         { c->config &= ~PRIM_RX;    }
-	else            { c->config |= PRIM_RX;     }
-
-	spi_write(c->spi, W_REGISTER(CONFIG), c->config);
-
-	spi_write_byte(c->spi, standby ? CE_OFF : CE_ON);
+	if (config != c->config) {
+		c->config = config;
+		spi_write(c->spi, W_REGISTER(CONFIG), c->config); 
+	}
+	
+	if (ce != -1) {
+		spi_write_byte(c->spi, ce);
+	}
 }
 
 ci24r1_status_t ci24r1_send(ci24r1_config_t *c, const uint8_t *data, uint8_t len, uint8_t wait) {
@@ -183,4 +198,6 @@ void ci24r1_config_rx_channel(ci24r1_config_t *c, uint8_t n, uint8_t enable, con
 	if(enable)  { c->en_rxaddr |= mask; }
 	else        { c->en_rxaddr &= ~mask; }
 	spi_write(c->spi, W_REGISTER(EN_RXADDR), c->en_rxaddr);
+
+	spi_write(c->spi, FLUSH_RX,                         0);
 }
