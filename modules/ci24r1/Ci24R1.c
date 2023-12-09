@@ -41,7 +41,7 @@ uint8_t ci24r1_init(ci24r1_config_t *c, spi_config_t *spi) {
 
 uint8_t ci24r1_online(ci24r1_config_t *c) {
 	uint8_t old = spi_read(c->spi, R_REGISTER(FEATURE));
-	if (old != 0x00 || old != 0xFF) { return 1; }
+	if (old != 0x00 && old != 0xFF) { return 1; }
 	uint8_t input = EN_DYN_ACK | EN_ACK_PAY | EN_DPL;
 	spi_write(c->spi, W_REGISTER(FEATURE), input);
 	uint8_t output = spi_read(c->spi, R_REGISTER(FEATURE));
