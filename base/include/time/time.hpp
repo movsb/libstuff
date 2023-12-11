@@ -1,17 +1,39 @@
 #pragma once
 
+#include <stdint.h>
+#include <inttypes.h>
+#include <assert.h>
+
+#if __STUFF_HAS_CALENDAR__ || __STUFF_HAS_UPTIME__
 #include <string>
-#include <sys/time.h>
+#endif
 
-#include "base.hpp"
+extern "C" {
+#if __STUFF_HAS_OS__
+	int32_t __stuff_base_time_os_ticks_of(int64_t milliseconds);
+#endif
 
-#include <esp_etm.h>
-#include <esp_timer.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
+void    __stuff_base_time_sleep_us(int64_t microseconds);
+	
+#if __STUFF_HAS_UPTIME__
+	int64_t __stuff_base_time_get_uptime();
+#endif
 
-namespace ebp {
+#if __STUFF_HAS_TZ__
+	// from glibc.
+	int  setenv(const char *__string, const char *__value, int __overwrite);
+	void tzset(void);
+#endif
 
+#if __STUFF_HAS_CALENDAR__
+	#if !__STUFF_USE_GET_TIME_OF_DAY__
+		void __stuff_get_calendar(int64_t *seconds, int64_t *microseconds);
+	#endif
+#endif
+}
+
+namespace stuff {
+namespace base {
 namespace time {
 
 class Duration {
@@ -25,10 +47,13 @@ public:
 	double  minutes()       const { return seconds()        / 60.0;     }
 	double  hours()         const { return minutes()        / 60.0;     }
 	double  days()          const { return hours()          / 24.0;     }
-	uint32_t ticks()        const {
-		auto n = milliseconds() / portTICK_PERIOD_MS;
+
+#if __STUFF_HAS_OS__
+	uint32_t osTicks()        const {
+		auto n = __stuff_base_time_ticks_of(milliseconds());
 		return n < 0 ? 0 : n;
 	}
+#endif
 	
 	Duration operator*(double n)                const { return _t * n;              }
 	Duration operator/(double n)                const { return _t / n;              }
@@ -39,10 +64,10 @@ public:
 	bool operator>=(const Duration& other)      const { return ! (*this < other);   }
 	bool operator!=(const Duration& other)      const { return ! (*this == other);  }
 
-protected:
+// protected:
 	int64_t _t;
 };
-	
+
 // To Allow expressions like N * Duration, where N is a constant.
 inline Duration operator*(double n, const Duration &duration) { return duration * n; }
 inline Duration operator/(double n, const Duration &duration) { return duration / n; }
@@ -58,8 +83,10 @@ inline const Duration
 
 
 inline void sleep(Duration duration) {
-	vTaskDelay(duration.ticks());
+	return __stuff_base_time_sleep_us(duration.microseconds());
 }
+
+#if __STUFF_HAS_CALENDAR__ || __STUFF_HAS_UPTIME__
 
 enum class Month : uint8_t {
 	January     = 1,
@@ -156,12 +183,23 @@ private:
 	std::tuple<int, Month, int, int> absDate(uint64_t abs) const;
 };
 
+#if __STUFF_HAS_CALENDAR__
 Time now();
+#endif
+
+#if __STUFF_HAS_UPTIME__
 Time ticks();
+#endif
+
+#if __STUFF_HAS_TZ__
 void setTZ(int offset);
+#endif
+
 inline Duration since(const Time& past)    { return now() - past;      }
 inline Duration until(const Time& future)  { return future - now();    }
 
-} // namespace time
+#endif // __STUFF_HAS_CALENDAR__ || __STUFF_HAS_UPTIME__
 
-} // namespace ebp
+} // namespace time
+} // namespace base
+} // namespace stuff

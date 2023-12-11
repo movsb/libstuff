@@ -1,11 +1,14 @@
-#include "ebp/time.hpp"
+#include <time/time.hpp>
 
-// from glibc.
-int     setenv(const char *__string, const char *__value, int __overwrite);
-void    tzset(void);
+#if __STUFF_USE_GET_TIME_OF_DAY__
+	#include <sys/time.h>
+#endif
 
-namespace ebp {
+namespace stuff {
+namespace base {
 namespace time {
+
+#if __STUFF_HAS_CALENDAR__ || __STUFF_HAS_UPTIME__
 
 Time  Time::operator+(const Duration &d) const {
 	Time t(*this);
@@ -130,6 +133,8 @@ std::tuple<int, Month, int, int> Time::absDate(uint64_t absolute) const
 	return { year, month, day, yday };
 }
 
+#if __STUFF_HAS_TZ__
+
 static int g_timezone_offset =  0;
 
 // offset is in seconds east from the UTC.
@@ -160,28 +165,57 @@ void setTZ(int offset)
 	tzset();
 }
 
-Time now()
-{
+#endif
+
+#if __STUFF_HAS_CALENDAR__ && __STUFF_USE_GET_TIME_OF_DAY__
+void __stuff_get_calendar(int64_t *seconds, int64_t *microseconds) {
 	timeval val{0, 0};
 	if (gettimeofday(&val, NULL) != 0) {
 		abort();
 	}
+	*seconds = val.tv_sec;
+	*microseconds = val.tv_usec;
+}
+#endif
+
+Time now()
+{
 	
 	Time t = {};
+
+#if __STUFF_HAS_CALENDAR__
 	t._sec      = val.tv_sec;
 	t._micro    = val.tv_usec;
-	t._mono     = esp_timer_get_time();
+#else
+	t._sec      = 0;
+	t._micro    = 0;
+#endif
 
+#if __STUFF_HAS_UPTIME__
+	t._mono     = __stuff_base_time_get_uptime();
+#else
+	t._mono     = 0;
+#endif
+
+#if __STUFF_HAS_TZ__
 	t._offset   = g_timezone_offset / 60 / 15;
+#else
+	t._offset   = 0;
+#endif
 	return t;
 }
 
+#if __STUFF_HAS_UPTIME__
 Time ticks()
 {
 	Time t;
-	t._mono = esp_timer_get_time();
+	t._mono = __stuff_base_time_get_uptime();
 	return t;
 }
+#endif
 
-}
-}
+#endif //__STUFF_HAS_CALENDAR__ || __STUFF_HAS_UPTIME__
+
+} // namespace time
+} // namespace base
+} // namespace stuff
