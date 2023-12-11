@@ -14,6 +14,15 @@ namespace stuff {
 namespace base {
 namespace time {
 
+/**
+ * @brief 持续时间，即时长。
+ * 
+ * 内部暂定用 int64_t 表示，以纳秒为单位。
+ * 2^63 nanoseconds to years is 292.2770246269 years
+ * 
+ * @todo 如何要考虑空间占用，可以用 2^31 表示毫秒，
+ *       大概有 2^31 ms to days is 24.8551348148 days
+*/
 class Duration {
 public:
 	Duration(int64_t nanoseconds) : _t(nanoseconds) {}
@@ -50,21 +59,22 @@ protected:
 inline Duration operator*(double n, const Duration &duration) { return duration * n; }
 inline Duration operator/(double n, const Duration &duration) { return duration / n; }
 
-inline const Duration
-	Nanosecond      = { 1 },
-	Microsecond     = { Nanosecond    * 1000 },
-	Millisecond     = { Microsecond   * 1000 },
-	Second          = { Millisecond   * 1000 },
-	Minute          = { Second        * 60   },
-	Hour            = { Minute        * 60   },
-	Day             = { Hour          * 24   };
+inline Duration nanoseconds (int64_t n) { return Duration       (n * 1);    }
+inline Duration microseconds(int64_t n) { return nanoseconds    (n * 1000); }
+inline Duration milliseconds(int64_t n) { return microseconds   (n * 1000); }
+inline Duration seconds     (double n)  { return milliseconds   (n * 1000); }
+inline Duration minutes     (double n)  { return seconds        (n * 60);   }
+inline Duration hours       (double n)  { return minutes        (n * 60);   }
+inline Duration days        (double n)  { return hours          (n * 24);   }
 
+// 别名
+inline Duration ns          (int64_t n) { return nanoseconds(n);    }
+inline Duration us          (int64_t n) { return microseconds(n);   }
+inline Duration ms          (int64_t n) { return milliseconds(n);   }
 
 inline void sleep(Duration duration) {
 	return __stuff_base_time_sleep_us(duration.microseconds());
 }
-
-void test();
 
 } // namespace time
 } // namespace base
