@@ -4,8 +4,16 @@
 namespace stuff {
 namespace base {
 namespace time {
-	
+
+#if __STUFF_HAS_SLEEP__
+// 外部实现的睡眠函数。
+extern "C" void __stuff_base_time_sleep_us(int64_t microseconds);
+
+void sleep(const Duration &duration) {
+	__stuff_base_time_sleep_us(duration.microseconds());
+}
+#endif
+
 } // namespace time
 } // namespace base
 } // namespace stuff
-

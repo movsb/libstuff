@@ -3,12 +3,9 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <assert.h>
+#include <string>
 
 #include "duration.hpp"
-
-#if __STUFF_HAS_CALENDAR__ || __STUFF_HAS_UPTIME__
-#include <string>
-#endif
 
 extern "C" {
 #if __STUFF_HAS_OS__
