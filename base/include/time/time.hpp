@@ -64,7 +64,7 @@ public:
 	bool operator>=(const Duration& other)      const { return ! (*this < other);   }
 	bool operator!=(const Duration& other)      const { return ! (*this == other);  }
 
-// protected:
+protected:
 	int64_t _t;
 };
 
