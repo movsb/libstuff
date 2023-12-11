@@ -3,12 +3,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <assert.h>
-
-extern "C" {
-
-void    __stuff_base_time_sleep_us(int64_t microseconds);
-
-}
+#include <chrono>
 
 namespace stuff {
 namespace base {
@@ -26,6 +21,16 @@ namespace time {
 class Duration {
 public:
 	Duration(int64_t nanoseconds) : _t(nanoseconds) {}
+	
+	/**
+	 * @brief 支持 1s, 1ms 1.1s 这类的带单位的表示法初始化，简化书写。
+	 * 
+	 * @note 需要 using namespace time::literals 开启。
+	 * @note 会增加 0.1KB 的空间使用。编译期常量，不会增加时间开销。
+	 */
+	template<typename Rep, typename Period>
+	Duration(const std::chrono::duration<Rep, Period> &duration) :
+		_t(std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count()) {}
 
 	int64_t nanoseconds()   const { return _t;                          }
 	int64_t microseconds()  const { return nanoseconds()    / 1000;     }
@@ -62,19 +67,40 @@ inline Duration operator/(double n, const Duration &duration) { return duration 
 inline Duration nanoseconds (int64_t n) { return Duration       (n * 1);    }
 inline Duration microseconds(int64_t n) { return nanoseconds    (n * 1000); }
 inline Duration milliseconds(int64_t n) { return microseconds   (n * 1000); }
+inline Duration seconds     (int64_t n) { return milliseconds   (n * 1000); }
+inline Duration minutes     (int64_t n) { return seconds        (n * 60);   }
+inline Duration hours       (int64_t n) { return minutes        (n * 60);   }
+inline Duration days        (int64_t n) { return hours          (n * 24);   }
+
+// 使用 double 会增加 2KB 的 .text（软件浮点运算情况下）。
+// 当然，除非完全不使用 double 表达式，否则是非常难以避免的，
+// 所以我提供了 int64_t 的版本。即省空间又省时间，效率提升。
 inline Duration seconds     (double n)  { return milliseconds   (n * 1000); }
 inline Duration minutes     (double n)  { return seconds        (n * 60);   }
 inline Duration hours       (double n)  { return minutes        (n * 60);   }
 inline Duration days        (double n)  { return hours          (n * 24);   }
 
-// 别名
+// 一些常用的别名
 inline Duration ns          (int64_t n) { return nanoseconds(n);    }
 inline Duration us          (int64_t n) { return microseconds(n);   }
 inline Duration ms          (int64_t n) { return milliseconds(n);   }
 
-inline void sleep(Duration duration) {
+// 支持 1s, 1ms 这类的带单位的表示法。
+namespace literals {
+	using namespace std::literals::chrono_literals;
+}
+
+#if !defined(__STUFF_HAS_SLEEP__)
+	#define __STUFF_HAS_SLEEP__ 1
+#endif
+
+#if __STUFF_HAS_SLEEP__
+// 外部实现的睡眠函数。
+extern "C" void __stuff_base_time_sleep_us(int64_t microseconds);
+inline void sleep(const Duration &duration) {
 	return __stuff_base_time_sleep_us(duration.microseconds());
 }
+#endif
 
 } // namespace time
 } // namespace base
