@@ -1,6 +1,6 @@
 #include <stdbool.h>
 #include <stdint.h>
-#include <base/alts/math.hpp>
+#include <stuff/base/alts/math.hpp>
 
 #ifdef __STUFF_ALTS_MATH_DIV__
 /**

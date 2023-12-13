@@ -1,4 +1,4 @@
-#include <time/time.hpp>
+#include <stuff/base/time/time.hpp>
 
 #if __STUFF_USE_GET_TIME_OF_DAY__
 	#include <sys/time.h>

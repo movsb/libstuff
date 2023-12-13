@@ -9,7 +9,7 @@
                 "${workspaceFolder}/**",
                 "/Users/tao/code/circuits/playground/build/config",
                 "${workspaceFolder}/modules/displays",
-                "/Users/tao/code/espressif/esp-idf/components/freertos/FreeRTOS-Kernel/include"
+                "/Users/tao/code/espressif/esp-idf/components/freertos/FreeRTOS-Kernel/include",
             ],
             "defines": [
                 "CONFIG_IDF_TARGET_ESP32C3",

@@ -1,4 +1,4 @@
-#include "random.hpp"
+#include <stuff/base/math/rand/random.hpp>
 
 #include <limits>
 

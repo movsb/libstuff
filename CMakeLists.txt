@@ -1,5 +1,11 @@
-idf_component_register(
-	SRCS "src/net.cpp" "src/wifi.cpp" "src/time.cpp" "src/os.cpp" "src/io.cpp" "src/http.cpp"
-	INCLUDE_DIRS "include"
-	PRIV_REQUIRES esp_netif esp_wifi esp_timer vfs driver esp_http_client
-)
+cmake_minimum_required(VERSION 3.21)
+
+project(stuff)
+
+set(CMAKE_CXX_FLAGS -std=gnu++17)
+
+add_executable(main main.cpp)
+
+add_subdirectory(base)
+
+target_link_libraries(main PRIVATE base)
