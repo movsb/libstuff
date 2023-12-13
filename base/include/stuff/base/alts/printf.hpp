@@ -6,7 +6,7 @@
 /**
  * @brief 原地替换 printf 的一种强类型实现。接收任意个数的参数并输出。
  * 
- * 强类型的好处之一是：打印 int、int16、int32、int64 不用再区分 %d、%ld、%u 之类的了，可以统一成 %d。
+ * 强类型的好处之一是：打印 int、int8、int16、int32、int64 不用再区分 %d、%ld、%u %llu 之类的了，可以统一成 %d。
  * 另外一个好处是：可以打印对象（比如包含 toString 的对象）。
  * 
  * 支持的类型：
@@ -28,9 +28,9 @@
  *   
  *   整数：
  * 
+ *   - %d 整数的十进制
  *   - %b 整数的二进制 - todo
  *   - %c unicode 码点值 - todo
- *   - %d 整数的十进制
  *   - %o 整数的八进制 - todo
  *   - %x 十六进制（小写）- todo
  *   - %X 十六进制（大写） - todo
@@ -79,6 +79,9 @@ inline int _printf(const char *&fmt, int32_t i)      { return _printf(fmt, stati
 inline int _printf(const char *&fmt, uint32_t i)     { return _printf(fmt, static_cast<uint64_t>(i)); }
 // inline int _printf(const char *&fmt, int i)          { return _printf(fmt, static_cast<int64_t>(i));  }
 // inline int _printf(const char *&fmt, unsigned int i) { return _printf(fmt, static_cast<uint64_t>(i)); }
+
+int _printf(const char *&fmt, float i);
+int _printf(const char *&fmt, double i);
 
 int _printf(const char *&fmt, const char *s);
 

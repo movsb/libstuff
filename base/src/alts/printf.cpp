@@ -1,5 +1,6 @@
 #include <stuff/base/alts/printf.hpp>
 #include <cstdio>
+#include <inttypes.h>
 
 namespace stuff {
 namespace base {
@@ -69,6 +70,8 @@ int _printf(const char *&fmt, char c) {
 }
 
 int _printf(const char *&fmt, int64_t i) {
+	int msb;
+
 	int n = _skip2percent(fmt);
 	switch (*fmt) {
 	case 'v':
@@ -76,26 +79,38 @@ int _printf(const char *&fmt, int64_t i) {
 		fmt++;
 		// fallthrough
 	case 0:
-		if (i == 0) {
-			n += _outputChar('0');
-			return n;
-		}
+		return ::printf("%" PRId64, i);
+	case 'x':
+		fmt++;
+		return ::printf("%" PRIx64, i);
+	case 'X':
+		fmt++;
+		return ::printf("%" PRIX64, i);
+	case 'b':
+		fmt++;
 		if (i < 0) {
 			n += _outputChar('-');
-			// BUG: 没处理 -max 的情况
 			i = -i;
 		}
-		while(i > 0) {
-			int r = i % 10;
-			n += _outputChar('0' + r);
-			i /= 10;
+		msb = 62;
+		for (; msb >= 1; msb--) {
+			if ((i & (int64_t(1) << msb)) == 0) {
+				continue;
+			}
+			break;
 		}
+		for (; msb >= 1; msb--) {
+			char c = (i & (int64_t(1) << msb)) == 0 ? '0' : '1';
+			n += _outputChar(c);
+		}
+		n += _outputChar(i & 1 ? '1' : '0');
 		return n;
 	default:
 		return n + _unknown(*fmt++);
 	}
 }
 int _printf(const char *&fmt, uint64_t i) {
+	int msb;
 	int n = _skip2percent(fmt);
 	switch (*fmt) {
 	case 'v':
@@ -103,15 +118,31 @@ int _printf(const char *&fmt, uint64_t i) {
 		fmt++;
 		// fallthrough
 	case 0:
-		if (n == 0) {
-			n += _outputChar('0');
-			return n;
+		return ::printf("%" PRIu64, i);
+	case 'x':
+		fmt++;
+		return ::printf("%" PRIx64, i);
+	case 'X':
+		fmt++;
+		return ::printf("%" PRIX64, i);
+	case 'b':
+		fmt++;
+		if (i < 0) {
+			n += _outputChar('-');
+			i = -i;
 		}
-		while(i > 0) {
-			int r = i % 10;
-			n += _outputChar('0' + r);
-			i /= 10;
+		msb = 63;
+		for (; msb >= 1; msb--) {
+			if ((i & (uint64_t(1) << msb)) == 0) {
+				continue;
+			}
+			break;
 		}
+		for (; msb >= 1; msb--) {
+			char c = (i & (uint64_t(1) << msb)) == 0 ? '0' : '1';
+			n += _outputChar(c);
+		}
+		n += _outputChar(i & 1 ? '1' : '0');
 		return n;
 	default:
 		return n + _unknown(*fmt++);
@@ -127,6 +158,31 @@ int _printf(const char *&fmt, const char *s) {
 	case 0:
 		n += _outputStr(s);
 		return n;
+	default:
+		return n + _unknown(*fmt++);
+	}
+}
+
+int _printf(const char *&fmt, float i) {
+	int n = _skip2percent(fmt);
+	switch (*fmt) {
+	case 'f':
+		fmt++;
+		// fallthrough
+	case 0:
+		return ::printf("%f", i);
+	default:
+		return n + _unknown(*fmt++);
+	}
+}
+int _printf(const char *&fmt, double i) {
+	int n = _skip2percent(fmt);
+	switch (*fmt) {
+	case 'f':
+		fmt++;
+		// fallthrough
+	case 0:
+		return ::printf("%l", i);
 	default:
 		return n + _unknown(*fmt++);
 	}
