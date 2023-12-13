@@ -1,7 +1,9 @@
-#include <cstdio>
+#include <stuff/base/alts/printf.hpp>
+
+using namespace stuff::base;
 
 int main() {
-	printf("hello stuff\n");
+	alts::printf("hello stuff %s\n");
 	return 0;
 }
 

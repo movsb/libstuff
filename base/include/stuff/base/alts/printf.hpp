@@ -2,7 +2,6 @@
 #include <type_traits>
 
 #include <stdint.h>
-#include <stdio.h>
 
 /**
  * @brief 原地替换 printf 的一种强类型实现。接收任意个数的参数并输出。
@@ -52,13 +51,6 @@
  *   - %p 0x 表示的十六进制 - todo
 */
 
-int outputChar(char c) {
-	return putchar(c);
-}
-int outputStr(const char* s) {
-	return printf("%s", s);
-}
-
 /**
  * 实现了一个强类型的输出库。也不知道有没有什么用？
 */
@@ -67,140 +59,32 @@ namespace stuff {
 namespace base {
 namespace alts {
 
+int _outputChar(char c);
+int _outputStr(const char* s);
+
 int _printf(const char *&fmt, int64_t i);
 
-int skip2percent(const char* &fmt) {
-	int n = 0;
-	while(*fmt && *fmt != '%') {
-		n += outputChar(*fmt);
-		fmt++;
-	}
-	if (*fmt == '%') { fmt++; }
-	if (*fmt == '%') {
-		fmt++;
-		n += outputChar('%');
-		return n + skip2percent(fmt);
-	}
-	return n;
-}
+int _skip2percent(const char* &fmt);
+int _unknown(char c);
+int _printf(const char *&fmt, bool b);
+int _printf(const char *&fmt, char c);
+int _printf(const char *&fmt, int64_t i);
+int _printf(const char *&fmt, uint64_t i);
 
-int unknown(char c) {
-	int n = outputChar('%');
-	n += outputStr("<unknown>");
-	n += outputChar(c);
-	return n;
-} 
+inline int _printf(const char *&fmt, int8_t i)       { return _printf(fmt, static_cast<int64_t>(i));  }
+inline int _printf(const char *&fmt, uint8_t i)      { return _printf(fmt, static_cast<uint64_t>(i)); }
+inline int _printf(const char *&fmt, int16_t i)      { return _printf(fmt, static_cast<int64_t>(i));  }
+inline int _printf(const char *&fmt, uint16_t i)     { return _printf(fmt, static_cast<uint64_t>(i)); }
+inline int _printf(const char *&fmt, int32_t i)      { return _printf(fmt, static_cast<int64_t>(i));  }
+inline int _printf(const char *&fmt, uint32_t i)     { return _printf(fmt, static_cast<uint64_t>(i)); }
+// inline int _printf(const char *&fmt, int i)          { return _printf(fmt, static_cast<int64_t>(i));  }
+// inline int _printf(const char *&fmt, unsigned int i) { return _printf(fmt, static_cast<uint64_t>(i)); }
 
-int _printf(const char *&fmt, bool b) {
-	int n = skip2percent(fmt);
-	switch (*fmt) {
-	case 'v':
-	case 't':
-		fmt++;
-		// fallthrough
-	case 0:
-		return n + outputStr(b ? "true" : "false");
-	case 'd':
-		fmt++;
-		return n + outputStr(b ? "1" : "0");
-	default:
-		return n + unknown(*fmt++);
-	}
-}
-
-int _printf(const char *&fmt, char c) {
-	int n = skip2percent(fmt);
-	switch (*fmt) {
-	case 'v':
-	case 'c':
-		fmt++;
-		// fallthrough
-	case 0:
-		return n + outputChar(c);
-	case 'd':
-		fmt--;
-		return n + _printf(fmt, static_cast<int64_t>(c));
-	default:
-		return n + unknown(*fmt++);
-	}
-}
-
-int _printf(const char *&fmt, int64_t i) {
-	int n = skip2percent(fmt);
-	switch (*fmt) {
-	case 'v':
-	case 'd':
-		fmt++;
-		// fallthrough
-	case 0:
-		if (i == 0) {
-			n += outputChar('0');
-			return n;
-		}
-		if (i < 0) {
-			n += outputChar('-');
-			// BUG: 没处理 -max 的情况
-			i = -i;
-		}
-		while(i > 0) {
-			int r = i % 10;
-			n += outputChar('0' + r);
-			i /= 10;
-		}
-		return n;
-	default:
-		return n + unknown(*fmt++);
-	}
-}
-int _printf(const char *&fmt, uint64_t i) {
-	int n = skip2percent(fmt);
-	switch (*fmt) {
-	case 'v':
-	case 'd':
-		fmt++;
-		// fallthrough
-	case 0:
-		if (n == 0) {
-			n += outputChar('0');
-			return n;
-		}
-		while(i > 0) {
-			int r = i % 10;
-			n += outputChar('0' + r);
-			i /= 10;
-		}
-		return n;
-	default:
-		return n + unknown(*fmt++);
-	}
-}
-
-int _printf(const char *&fmt, int8_t i)       { return _printf(fmt, static_cast<int64_t>(i));  }
-int _printf(const char *&fmt, uint8_t i)      { return _printf(fmt, static_cast<uint64_t>(i)); }
-int _printf(const char *&fmt, int16_t i)      { return _printf(fmt, static_cast<int64_t>(i));  }
-int _printf(const char *&fmt, uint16_t i)     { return _printf(fmt, static_cast<uint64_t>(i)); }
-int _printf(const char *&fmt, int32_t i)      { return _printf(fmt, static_cast<int64_t>(i));  }
-int _printf(const char *&fmt, uint32_t i)     { return _printf(fmt, static_cast<uint64_t>(i)); }
-int _printf(const char *&fmt, int i)          { return _printf(fmt, static_cast<int64_t>(i));  }
-int _printf(const char *&fmt, unsigned int i) { return _printf(fmt, static_cast<uint64_t>(i)); }
-
-int _printf(const char *&fmt, const char *s) {
-	int n = skip2percent(fmt);
-	switch (*fmt) {
-	case 's':
-		fmt++;
-		// fallthrough
-	case 0:
-		n += outputStr(s);
-		return n;
-	default:
-		return n + unknown(*fmt++);
-	}
-}
+int _printf(const char *&fmt, const char *s);
 
 template<typename T>
 int _printf(const char* &fmt, T *t) {
-	int n = skip2percent(fmt);
+	int n = _skip2percent(fmt);
 	switch (*fmt) {
 	case 'd':
 		fmt--;
@@ -208,7 +92,7 @@ int _printf(const char* &fmt, T *t) {
 	case '0':
 		return n + _printf(fmt, reinterpret_cast<uint64_t>(t));
 	default:
-		return n + unknown(*fmt++);
+		return n + _unknown(*fmt++);
 	}
 }
 
@@ -224,7 +108,7 @@ public:
 template <typename T>
 typename std::enable_if<_has_to_string<T>::value, int >::type
 _printf(const char* &fmt, const T &t) {
-	int n = skip2percent(fmt);
+	int n = _skip2percent(fmt);
 	switch (*fmt) {
 	case 's':
 		fmt--;
@@ -232,7 +116,7 @@ _printf(const char* &fmt, const T &t) {
 	case 0:
 		return n + _printf(fmt, t.toString());
 	default:
-		return n + unknown(*fmt++);
+		return n + _unknown(*fmt++);
 	}
 }
 
@@ -251,26 +135,11 @@ int printf(const char* fmt, Args&&... args) {
 	}
 	return n;
 }
+template<>
+inline int printf(const char* s) {
+	return _outputStr(s);
+}
 
 } // namespace alts
 } // namespace base
 } // namespace stuff
-
-
-#if 0
-
-using namespace stuff::base::alts;
-
-int main() {
-		// 假设有一个需要 toString 函数的类
-	struct MyClass {
-		const char* toString() const {
-			return "my class";
-		}
-	};
-
-    MyClass obj;
-	stuff::base::alts::printf("%t %% %d %d %d %s %s %c %f\n", false, 1, 1, 1, "1234", obj, 'c', 3.14);
-}
-
-#endif

@@ -17,6 +17,7 @@
 		"compare": "cpp",
 		"random": "cpp",
 		"type_traits": "cpp",
-		"chrono": "cpp"
+		"chrono": "cpp",
+		"utility": "cpp"
 	}
 }
