@@ -127,10 +127,6 @@ int _printf(const char *&fmt, uint64_t i) {
 		return ::printf("%" PRIX64, i);
 	case 'b':
 		fmt++;
-		if (i < 0) {
-			n += _outputChar('-');
-			i = -i;
-		}
 		msb = 63;
 		for (; msb >= 1; msb--) {
 			if ((i & (uint64_t(1) << msb)) == 0) {
@@ -182,7 +178,7 @@ int _printf(const char *&fmt, double i) {
 		fmt++;
 		// fallthrough
 	case 0:
-		return ::printf("%l", i);
+		return ::printf("%f", i);
 	default:
 		return n + _unknown(*fmt++);
 	}
