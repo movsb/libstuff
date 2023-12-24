@@ -1,5 +1,3 @@
-#include <stuff/ports/esp8266/net/wifi.hpp>
-
 #include "sdkconfig.h"
 #include "esp_event.h"
 #include "esp_wifi.h"
@@ -13,12 +11,6 @@
 #include "lwip/sys.h"
 
 #include <cstring>
-
-namespace stuff {
-namespace ports {
-namespace esp8266 {
-namespace net {
-namespace wifi {
 
 static char s_connection_name[32];
 static char s_connection_passwd[32];
@@ -175,7 +167,7 @@ esp_err_t example_disconnect(void)
     return ESP_OK;
 }
 
-int Station::connect(const char *ssid, const char *password) {
+extern "C" int _stuff_net_wifi_connect(const char *ssid, const char *password) {
 	std::strncpy(s_connection_name, ssid, sizeof(s_connection_name));
 	std::strncpy(s_connection_passwd, password, sizeof(s_connection_passwd));
 
@@ -183,9 +175,3 @@ int Station::connect(const char *ssid, const char *password) {
 	
 	return 0;
 }
-
-} // namespace wifi
-} // namespace net
-} // namespace esp8266
-} // namespace ports
-} // namespace stuff
