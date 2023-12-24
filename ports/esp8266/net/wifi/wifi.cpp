@@ -107,7 +107,8 @@ static void start(void)
 #endif    
 
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
-    wifi_config_t wifi_config = { 0 };
+    wifi_config_t wifi_config;
+    std::memset(&wifi_config, 0, sizeof(wifi_config));
 
     strncpy((char *)&wifi_config.sta.ssid, s_connection_name, 32);
     strncpy((char *)&wifi_config.sta.password, s_connection_passwd, 32);
