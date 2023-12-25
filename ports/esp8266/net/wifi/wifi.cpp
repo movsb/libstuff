@@ -27,7 +27,45 @@ static void _init_wifi() {
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 	ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+ 	// @todo WIFI_MODE_NULL 可以用来关闭所有模式吗？
+	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_NULL));
 	_initialized = true;
+}
+
+/**
+ * @brief 控制 WiFi 的工作模式。
+ * 
+ * 可以单独控制某个模式的开/关，也可以全部控制。
+ * 
+*/
+static void _update_wifi_mode(wifi_mode_t mode, bool enable) {
+	wifi_mode_t old_mode;
+	ESP_ERROR_CHECK(esp_wifi_get_mode(&old_mode));
+	ESP_LOGI(TAG, "current wifi mode [%d]", old_mode);
+
+	bool hasSTA = false, hasAP = false;
+
+	switch (old_mode) {
+	case WIFI_MODE_AP:      hasAP = true; break;
+	case WIFI_MODE_STA:     hasSTA = true; break;
+	case WIFI_MODE_APSTA:   hasAP = true; hasSTA = true; break;
+	default: break;
+	}
+
+	switch (mode) {
+	case WIFI_MODE_AP:      hasAP = enable; break;
+	case WIFI_MODE_STA:     hasSTA = enable; break;
+	case WIFI_MODE_APSTA:   hasAP = enable; hasSTA = enable; break;
+	default: break;
+	}
+	
+	if (hasAP && hasSTA)    { mode = WIFI_MODE_APSTA;   }
+	else if (hasAP)         { mode = WIFI_MODE_AP;      }
+	else if (hasSTA)        { mode = WIFI_MODE_STA;     }
+	else                    { mode = WIFI_MODE_NULL;    }
+	
+	ESP_LOGI(TAG, "Setting wifi mode: %d", mode);
+	ESP_ERROR_CHECK(esp_wifi_set_mode(mode));
 }
 
 /**
@@ -62,14 +100,8 @@ public:
 		
 		ESP_LOGI(TAG, "Connecting to [%s]", ssid);
 
-		wifi_mode_t mode;
-		ESP_ERROR_CHECK(esp_wifi_get_mode(&mode));
-		switch (mode) {
-		case WIFI_MODE_AP:  mode = WIFI_MODE_APSTA; break;
-		default:            mode = WIFI_MODE_STA;   break;
-		}
+		_update_wifi_mode(WIFI_MODE_STA, true);
 
-		ESP_ERROR_CHECK(esp_wifi_set_mode(mode));
 		ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &cfg));
 		
 		ESP_ERROR_CHECK(esp_wifi_start());
@@ -205,14 +237,8 @@ public:
 		std::memcpy(ap.ssid, ssid, m+1);
 		std::memcpy(ap.password, password, n ? n + 1 : 0);
 		
-		wifi_mode_t mode;
-		ESP_ERROR_CHECK(esp_wifi_get_mode(&mode));
-		switch (mode) {
-		case WIFI_MODE_STA: mode = WIFI_MODE_APSTA; break;
-		default:            mode = WIFI_MODE_AP;   break;
-		}
-
-		ESP_ERROR_CHECK(esp_wifi_set_mode(mode));
+		_update_wifi_mode(WIFI_MODE_AP, true);
+		
 		ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &cfg));
 		
 		ESP_ERROR_CHECK(esp_wifi_start());
