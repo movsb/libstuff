@@ -36,6 +36,36 @@ protected:
 	_Station *_impl;
 };
 
+// WiFi AP
+struct _AccessPoint {
+	virtual int start(const char *ssid, const char *password) = 0;
+};
+
+extern _AccessPoint* __new_access_point();
+extern void      __delete_access_point(_AccessPoint *ap);
+
+class AccessPoint {
+public:
+	AccessPoint()
+	{
+		_impl = __new_access_point();
+		if (_impl == nullptr) {
+			abort();
+		}
+	}
+	virtual ~AccessPoint() {
+		__delete_access_point(_impl);
+	}
+
+public:
+	int start(const char *ssid, const char *password) {
+		return _impl->start(ssid, password);
+	}
+
+protected:
+	_AccessPoint *_impl;
+};
+
 } // namespace wifi
 } // namespace net
 } // namespace stuff

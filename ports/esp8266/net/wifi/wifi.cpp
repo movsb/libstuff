@@ -20,6 +20,16 @@
 
 static const char *TAG = "example_connect";
 
+static void _init_wifi() {
+	static bool _initialized = false;
+	if (_initialized) { return; }
+	tcpip_adapter_init();
+	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+	ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+	_initialized = true;
+}
+
 /**
  * @todo 只能创建一个实例。
 */
@@ -31,7 +41,7 @@ public:
 		_event_group = xEventGroupCreate();
 	}
 	virtual ~Station() {
-		_uninit();
+		// _uninit();
 		vEventGroupDelete(_event_group);
 	}
 public:
@@ -58,8 +68,8 @@ public:
 		case WIFI_MODE_AP:  mode = WIFI_MODE_APSTA; break;
 		default:            mode = WIFI_MODE_STA;   break;
 		}
-		ESP_ERROR_CHECK(esp_wifi_set_mode(mode));
 
+		ESP_ERROR_CHECK(esp_wifi_set_mode(mode));
 		ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &cfg));
 		
 		ESP_ERROR_CHECK(esp_wifi_start());
@@ -75,14 +85,12 @@ public:
 
 protected:
 	void _init() {
-		wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-		ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+		_init_wifi();
 		ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_CONNECTED, &_onConnected, this));
 		ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &_onDisconnected, this));
 		ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &_onGotIPv4, this));
-		
-		ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
 	}
+	/*
 	void _uninit(void) {
 		esp_err_t err = esp_wifi_stop();
 		if (err == ESP_ERR_WIFI_NOT_INIT) {
@@ -96,6 +104,7 @@ protected:
 
 		ESP_ERROR_CHECK(esp_wifi_deinit());
 	}
+	*/
 private:
 	static void _onConnected(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
 		auto that = reinterpret_cast<Station*>(arg);
@@ -146,6 +155,106 @@ _Station* __new_station() {
 
 void __delete_station(_Station* station) {
 	delete reinterpret_cast<::Station*>(station);
+}
+
+}
+}
+}
+
+/**
+ * @todo 只能创建一个实例。
+*/
+class AccessPoint : public stuff::net::wifi::_AccessPoint {
+public:
+	AccessPoint()
+	{
+		_init();
+	}
+	virtual ~AccessPoint() {
+		// _uninit();
+	}
+public:
+	virtual int start(const char *ssid, const char *password) override {
+		wifi_config_t cfg;
+		std::memset(&cfg, 0, sizeof(cfg));
+		int m = strlen(ssid), n = password ? strlen(password) : 0;
+		if (m <= 0) {
+			ESP_LOGE(TAG, "Invalid ssid");
+			return -1;
+		}
+		if (m > sizeof(cfg.sta.ssid) - 1) {
+			ESP_LOGE(TAG, "ssid [%s] too long", ssid);
+			return -1;
+		}
+		if (n > sizeof(cfg.sta.password) - 1) {
+			ESP_LOGE(TAG, "password [%s] too long", password);
+			return -1;
+		}
+
+		auto &ap = cfg.ap;
+		// WIFI_AUTH_WPA3_PSK 会崩溃，暂时不使用
+		ap.authmode = n > 0 ? WIFI_AUTH_WPA2_PSK : WIFI_AUTH_OPEN;
+		ap.max_connection = 1;
+		ap.ssid_hidden = 0;
+
+		std::memcpy(ap.ssid, ssid, m+1);
+		std::memcpy(ap.password, password, n ? n + 1 : 0);
+		
+		wifi_mode_t mode;
+		ESP_ERROR_CHECK(esp_wifi_get_mode(&mode));
+		switch (mode) {
+		case WIFI_MODE_STA: mode = WIFI_MODE_APSTA; break;
+		default:            mode = WIFI_MODE_AP;   break;
+		}
+
+		ESP_ERROR_CHECK(esp_wifi_set_mode(mode));
+		ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &cfg));
+		
+		ESP_ERROR_CHECK(esp_wifi_start());
+
+		return 0;
+	}
+
+protected:
+	void _init() {
+		_init_wifi();
+		ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &_eventHandler, this));
+	}
+	/*
+	void _uninit(void) {
+		esp_err_t err = esp_wifi_stop();
+		if (err == ESP_ERR_WIFI_NOT_INIT) {
+			return;
+		}
+		ESP_ERROR_CHECK(err);
+
+		ESP_ERROR_CHECK(esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &_eventHandler));
+
+		ESP_ERROR_CHECK(esp_wifi_deinit());
+	}
+	*/
+private:
+	static void _eventHandler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+		auto that = reinterpret_cast<AccessPoint*>(arg);
+		return that->eventHandler(event_base, event_id, event_data);
+	}
+	void eventHandler(esp_event_base_t event_base,int32_t event_id, void *event_data) {
+	}
+
+private:
+};
+
+
+namespace stuff {
+namespace net {
+namespace wifi {
+
+_AccessPoint* __new_access_point() {
+	return new ::AccessPoint();
+}
+
+void __delete_access_point(_AccessPoint* ap) {
+	delete reinterpret_cast<::AccessPoint*>(ap);
 }
 
 }
