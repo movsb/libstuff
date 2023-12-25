@@ -126,8 +126,13 @@ private:
 			// Switch to 802.11 bgn mode
 			esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
 		}
-		
-		ESP_ERROR_CHECK(esp_wifi_connect());
+
+		// 如果工作模式发生了改变（不再是 STA，则不需要重连）。
+		wifi_mode_t mode;
+		ESP_ERROR_CHECK(esp_wifi_get_mode(&mode));
+		if (mode == WIFI_MODE_STA || mode == WIFI_MODE_APSTA) {
+			ESP_ERROR_CHECK(esp_wifi_connect());
+		}
 	}
 	static void _onGotIPv4(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
 		auto that = reinterpret_cast<Station*>(arg);
