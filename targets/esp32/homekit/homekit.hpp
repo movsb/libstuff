@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstring>
+#include <cstdlib>
 #include <functional>
 
 #include <hap.h>
@@ -11,6 +12,24 @@ namespace stuff {
 namespace targets {
 namespace esp32 {
 namespace homekit {
+
+void init(const char *setupCode, const char *setupID) {
+	hap_cfg_t cfg;
+	if(::hap_get_config(&cfg) != HAP_SUCCESS) {
+		abort();
+	}
+	cfg.unique_param = UNIQUE_NAME;
+	if (::hap_set_config(&cfg) != HAP_SUCCESS) {
+		abort();
+	}
+
+	if (::hap_init(HAP_TRANSPORT_WIFI) != HAP_SUCCESS) {
+		abort();
+	}
+
+	::hap_set_setup_code(setupCode);
+	::hap_set_setup_id(setupID);
+}
 
 struct CharPtrRef {
 	const char *ptr;
@@ -118,6 +137,52 @@ private:
 protected:
 	hap_serv_t *_svc;
 };
+
+class Accessory {
+public:
+	Accessory(
+		hap_cid_t cid,
+		const char *name,
+		const char *model,
+		const char *manufacturer,
+		const char *serialNumber,
+		const char *firmwareRevision
+	)
+	{
+		hap_acc_cfg_t cfg = {
+			.name               = const_cast<char*>(name),
+			.model              = const_cast<char*>(model),
+			.manufacturer       = const_cast<char*>(manufacturer),
+			.serial_num         = const_cast<char*>(serialNumber),
+			.fw_rev             = const_cast<char*>(firmwareRevision),
+			.hw_rev             = nullptr,
+			.pv                 = const_cast<char*>("1.1.0"),
+			.cid                = cid,
+			.identify_routine   = [](hap_acc_t *) { return HAP_SUCCESS; }
+		};
+		_acc = ::hap_acc_create(&cfg);
+		if (_acc == nullptr) { abort(); }
+	}
+	operator hap_acc_t*() const { return _acc; }
+public:
+	void addService(Service *service) {
+		if (::hap_acc_add_serv(_acc, *service) != HAP_SUCCESS) {
+			abort();
+		}
+	}
+protected:
+	hap_acc_t *_acc;
+};
+
+void addAccessory(Accessory *accessory) {
+	::hap_add_accessory(*accessory);
+}
+
+void start() {
+	if (::hap_start() != HAP_SUCCESS) {
+		abort();
+	}
+}
 
 class Lightbulb : public Service {
 public:
