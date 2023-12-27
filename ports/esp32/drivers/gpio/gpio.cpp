@@ -1,4 +1,4 @@
-#include <stuff/ports/esp8266/drivers/gpio/gpio.hpp>
+#include <stuff/ports/esp32/drivers/gpio/gpio.hpp>
 
 #include <driver/gpio.h>
 
