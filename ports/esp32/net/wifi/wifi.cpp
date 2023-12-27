@@ -3,7 +3,7 @@
 #include "esp_wifi.h"
 #include <esp_log.h>
 #include "esp_event_loop.h"
-#include "tcpip_adapter.h"
+#include <esp_netif.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
@@ -23,7 +23,7 @@ static const char *TAG = "example_connect";
 static void _init_wifi() {
 	static bool _initialized = false;
 	if (_initialized) { return; }
-	tcpip_adapter_init();
+	ESP_ERROR_CHECK(esp_netif_init());
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 	ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));

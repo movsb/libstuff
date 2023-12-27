@@ -3,7 +3,7 @@
 
 namespace stuff {
 namespace ports {
-namespace esp8266 {
+namespace esp32 {
 namespace drivers {
 namespace gpio {
 	using GPIO = stuff::drivers::gpio::GPIO<gpio_num_t>;
