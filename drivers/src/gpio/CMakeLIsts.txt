@@ -1,0 +1,2 @@
+file(GLOB _SRCS *.cpp)
+set(LIB_SRCS ${LIB_SRCS} ${_SRCS} PARENT_SCOPE)
