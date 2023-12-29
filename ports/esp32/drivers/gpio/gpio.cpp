@@ -2,11 +2,15 @@
 
 #include <driver/gpio.h>
 
+extern void fuck_fuck_fuck();
+
 namespace stuff {
 namespace drivers {
 namespace gpio {
 
-void __stuff_reset(const gpio_num_t &num) {}
+void __stuff_reset(const gpio_num_t &num) {
+	fuck_fuck_fuck();
+}
 
 void __stuff_set_direction(const gpio_num_t &num, Direction::Value direction) {
 	gpio_mode_t mode;
