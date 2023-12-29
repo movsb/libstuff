@@ -224,6 +224,10 @@ protected:
 	std::function<void(bool on)>    _onWriteOn;
 };
 
+void resetPairings() {
+	::hap_reset_pairings();
+}
+
 }
 }
 }
