@@ -9,5 +9,8 @@
 # file(GLOB INC ../esp32)
 # set(STUFF_INCLUDES ${STUFF_INCLUDES} ${INC} PARENT_SCOPE)
 
-file(GLOB _SRCS *.cpp)
-idf_component_register(SRCS ${_SRCS} INCLUDE_DIRS . REQUIRES app_update esp_https_ota)
+idf_component_register(
+	SRC_DIRS .
+	INCLUDE_DIRS .
+	REQUIRES app_update esp_https_ota esp_http_server
+)

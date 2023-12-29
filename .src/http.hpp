@@ -1,49 +1,45 @@
 #pragma once
 
-#include <ebp/base.hpp>
-
 #include <tuple>
 #include <memory>
 #include <vector>
 #include <unordered_map>
 
-#include <string.h>
+#include <cstring>
+#include <cstdlib>
 #include <strings.h>
-#include <stdlib.h>
-#include <esp_event.h>
-#include <esp_netif.h>
-#include <esp_http_client.h>
 
-#include "io.hpp"
-
-namespace ebp {
+namespace stuff {
+namespace net {
 namespace http {
 
-class Header
-{
+/**
+ * @brief HTP Header 头部。
+*/
+class Header {
 public:
 	Header() {}
 	Header(const Header&) = delete;
 	Header(Header&& ref) {
-		_headers = std::move(ref._headers);
+		_pairs = std::move(ref._pairs);
 	}
 public:
-	void clear()                                                { _headers.clear(); }
-	std::size_t size() const                                    { return _headers.size(); }
+	void clear()                                                { _pairs.clear(); }
+	std::size_t size() const                                    { return _pairs.size(); }
 	void set(const std::string &key, const std::string &value)  { return set(key.c_str(), value.c_str()); }
-	void set(const char *key, const char *value)                { _headers[canonicalKey(std::string(key))] = value; }
+	void set(const char *key, const char *value)                { _pairs[canonicalKey(std::string(key))] = value; }
 	std::string get(const std::string&key) const                { return get(key.c_str()); }
 	std::string get(const char *key) const {
-		auto it = _headers.find(canonicalKey(std::string(key)));
-		if (it == _headers.end()) { return ""; }
+		auto it = _pairs.find(canonicalKey(std::string(key)));
+		if (it == _pairs.end()) { return ""; }
 		return it->second;
 	}
 	bool remove(const std::string &key)                         { return remove(key.c_str()); }
-	bool remove(const char *key)                                { return _headers.erase(canonicalKey(std::string(key))) > 0; }
+	bool remove(const char *key)                                { return _pairs.erase(canonicalKey(std::string(key))) > 0; }
 
 public: // 迭代器支持
-	auto begin()    const { return _headers.begin(); }
-	auto end()      const { return _headers.end();   }
+	auto begin()    const { return _pairs.begin(); }
+	auto end()      const { return _pairs.end();   }
 	
 protected:
 	// 把头部名字变成标准的名字。原地修改。
@@ -53,9 +49,10 @@ protected:
 
 protected:
 	// 目前仅支持单值，但是 HTTP 标准是明确支持同名 key 的。
-	std::unordered_map<std::string, std::string> _headers;
+	// 只是这种情况使用场景不是特别高，暂时不予以支持，后期可以支持。
+	std::unordered_map<std::string, std::string> _pairs;
 };
-	
+
 using Method = esp_http_client_method_t;
 
 class Client {
@@ -129,7 +126,7 @@ public:
 		// 返回头部字段列表。
 		const Header& header() const {
 			alt::must(_client);
-			return _client->_headers;
+			return _client->_pairs;
 		}
 		// 返回 body，作为 io::Reader 流。
 		io::Reader& body();
@@ -194,11 +191,12 @@ protected:
 	
 protected:
 	esp_http_client_handle_t    _client;
-	Header                      _headers;
+	Header                      _pairs;
 };
 
 using Request = Client::Request;
 using Response = Client::Response;
 
 } // namespace http
-} // namespace ebp
+} // namespace net
+} // namespace stuff

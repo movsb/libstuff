@@ -3,6 +3,7 @@
 #include <charconv>
 
 #include "ebp/http.hpp"
+#include "http.hpp"
 
 namespace ebp {
 namespace http {
