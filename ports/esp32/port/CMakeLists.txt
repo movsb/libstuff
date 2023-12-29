@@ -18,7 +18,7 @@
 # set(LIB_SRCS ${BASE_SRCS} ${DRIVERS_GPIO_SRCS} ${NET_WIFI_SRCS} ${NET_HTTP_SRCS})
 # message("ports/esp32:" ${LIB_SRCS})
 idf_component_register(
-	SRC_DIRS base drivers/gpio net/wifi
-	INCLUDE_DIRS include ../../libraries/_include
+	SRC_DIRS .. ../base ../drivers/gpio ../net/wifi
+	INCLUDE_DIRS ../include ../../../libraries/_include
 	REQUIRES esp_http_server
 )

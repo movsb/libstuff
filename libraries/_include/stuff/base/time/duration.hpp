@@ -98,6 +98,8 @@ namespace literals {
 void sleep(const Duration &duration);
 #endif
 
+void set_sleep_func(void (*sleep_func)(int64_t microseconds));
+
 } // namespace time
 } // namespace base
 } // namespace stuff

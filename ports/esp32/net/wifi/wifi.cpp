@@ -163,6 +163,7 @@ private:
 		wifi_mode_t mode;
 		ESP_ERROR_CHECK(esp_wifi_get_mode(&mode));
 		if (mode == WIFI_MODE_STA || mode == WIFI_MODE_APSTA) {
+			vTaskDelay(1000 / portTICK_PERIOD_MS);
 			ESP_ERROR_CHECK(esp_wifi_connect());
 		}
 	}
