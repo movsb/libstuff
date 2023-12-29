@@ -39,6 +39,7 @@ protected:
 // WiFi AP
 struct _AccessPoint {
 	virtual int start(const char *ssid, const char *password) = 0;
+	virtual int stop() = 0;
 };
 
 extern _AccessPoint* __new_access_point();
@@ -60,6 +61,9 @@ public:
 public:
 	int start(const char *ssid, const char *password) {
 		return _impl->start(ssid, password);
+	}
+	int stop() {
+		return _impl->stop();
 	}
 
 protected:

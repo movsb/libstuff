@@ -246,6 +246,10 @@ public:
 
 		return 0;
 	}
+	virtual int stop() override {
+		_update_wifi_mode(WIFI_MODE_AP, false);
+		return 0;
+	}
 
 protected:
 	void _init() {

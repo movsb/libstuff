@@ -67,10 +67,12 @@ inline Duration operator/(double n, const Duration &duration) { return duration 
 inline Duration nanoseconds (int64_t n) { return Duration       (n * 1);    }
 inline Duration microseconds(int64_t n) { return nanoseconds    (n * 1000); }
 inline Duration milliseconds(int64_t n) { return microseconds   (n * 1000); }
-inline Duration seconds     (int64_t n) { return milliseconds   (n * 1000); }
-inline Duration minutes     (int64_t n) { return seconds        (n * 60);   }
-inline Duration hours       (int64_t n) { return minutes        (n * 60);   }
-inline Duration days        (int64_t n) { return hours          (n * 24);   }
+
+// 会与 double 重载函数冲突。
+// inline Duration seconds     (int64_t n) { return milliseconds   (n * 1000); }
+// inline Duration minutes     (int64_t n) { return seconds        (n * 60);   }
+// inline Duration hours       (int64_t n) { return minutes        (n * 60);   }
+// inline Duration days        (int64_t n) { return hours          (n * 24);   }
 
 // 使用 double 会增加 2KB 的 .text（软件浮点运算情况下）。
 // 当然，除非完全不使用 double 表达式，否则是非常难以避免的，
@@ -97,8 +99,6 @@ namespace literals {
 #if __STUFF_HAS_SLEEP__
 void sleep(const Duration &duration);
 #endif
-
-void set_sleep_func(void (*sleep_func)(int64_t microseconds));
 
 } // namespace time
 } // namespace base
