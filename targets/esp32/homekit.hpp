@@ -110,6 +110,21 @@ protected:
 			::hap_serv_set_read_cb(_svc, _read);
 			::hap_serv_set_write_cb(_svc, _write);
 		}
+public:
+	struct _CharacteristicIterator {
+		Characteristic operator*() const { return _ch; }
+		bool operator !=(const _CharacteristicIterator &other) { return _ch != other._ch; }
+		_CharacteristicIterator operator++() { _ch = ::hap_char_get_next(_ch); return *this; }
+		hap_char_t *_ch;
+	};
+	struct _CharacteristicsIterable {
+		_CharacteristicIterator begin() { return { ::hap_serv_get_first_char(service) }; }
+		_CharacteristicIterator end() { return { nullptr }; }
+		Service &service;
+	};
+	_CharacteristicsIterable characteristics() {
+		return { *this };
+	}
 protected:
 	virtual void onWrite(WriteData writes) { }
 	virtual hap_status_t onRead(Characteristic hc) { return HAP_STATUS_RES_ABSENT; }
@@ -218,6 +233,13 @@ public:
 	}
 	void onWriteOn(std::function<void(bool on)> fn) {
 		_onWriteOn = fn;
+	}
+	void writeOn(bool on) {
+		for (auto ch : characteristics()) {
+			if (ch.typeUUID() == HAP_CHAR_UUID_ON) {
+				ch.updateValue(on);
+			}
+		}
 	}
 protected:
 	std::function<bool()>           _onReadOn;
