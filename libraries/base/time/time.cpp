@@ -1,6 +1,6 @@
 #include <stuff/base/time/time.hpp>
 
-#if __STUFF_USE_GET_TIME_OF_DAY__
+#if defined(__STUFF_USE_GET_TIME_OF_DAY__)
 	#include <sys/time.h>
 #endif
 
@@ -8,8 +8,9 @@ namespace stuff {
 namespace base {
 namespace time {
 
-#if __STUFF_HAS_CALENDAR__ || __STUFF_HAS_UPTIME__
+#if defined(__STUFF_HAS_CALENDAR__) || defined(__STUFF_HAS_UPTIME__)
 
+// 怎么感觉实现得好复杂。这不比 int64_t + int64_t 复杂多了？
 Time  Time::operator+(const Duration &d) const {
 	Time t(*this);
 	
@@ -167,7 +168,7 @@ void setTZ(int offset)
 
 #endif
 
-#if __STUFF_HAS_CALENDAR__ && __STUFF_USE_GET_TIME_OF_DAY__
+#if defined(__STUFF_HAS_CALENDAR__) && defined(__STUFF_USE_GET_TIME_OF_DAY__)
 void __stuff_get_calendar(int64_t *seconds, int64_t *microseconds) {
 	timeval val{0, 0};
 	if (gettimeofday(&val, NULL) != 0) {
@@ -183,33 +184,38 @@ Time now()
 	
 	Time t = {};
 
-#if __STUFF_HAS_CALENDAR__
-	t._sec      = val.tv_sec;
-	t._micro    = val.tv_usec;
-#else
-	t._sec      = 0;
-	t._micro    = 0;
+#if defined(__STUFF_HAS_CALENDAR__)
+	{
+		int64_t s, us;
+		__stuff_get_calendar(&s, &us);
+		t._sec = s;
+		t._micro = us;
+	}
 #endif
 
-#if __STUFF_HAS_UPTIME__
-	t._mono     = __stuff_base_time_get_uptime();
-#else
-	t._mono     = 0;
+#if defined(__STUFF_HAS_UPTIME__)
+	t._mono = __stuff_get_uptime();
 #endif
 
-#if __STUFF_HAS_TZ__
+#if defined(__STUFF_HAS_TZ__)
 	t._offset   = g_timezone_offset / 60 / 15;
-#else
-	t._offset   = 0;
 #endif
+
 	return t;
 }
 
-#if __STUFF_HAS_UPTIME__
+#if defined(__STUFF_HAS_UPTIME__)
+/**
+ * @brief 返回自系统运行以来的微秒数。
+ * 
+ * 主要用来计数、统计等。
+ * 
+ * @note 日历和时区等信息不可用。
+*/
 Time ticks()
 {
 	Time t;
-	t._mono = __stuff_base_time_get_uptime();
+	t._mono = __stuff_get_uptime();
 	return t;
 }
 #endif

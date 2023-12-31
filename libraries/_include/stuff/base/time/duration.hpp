@@ -20,7 +20,7 @@ namespace time {
 */
 class Duration {
 public:
-	Duration(int64_t nanoseconds) : _t(nanoseconds) {}
+	explicit Duration(int64_t nanoseconds) : _t(nanoseconds) {}
 	
 	/**
 	 * @brief 支持 1s, 1ms 1.1s 这类的带单位的表示法初始化，简化书写。
@@ -42,13 +42,15 @@ public:
 
 #if __STUFF_HAS_OS__
 	uint32_t osTicks()        const {
-		auto n = __stuff_base_time_ticks_of(milliseconds());
-		return n < 0 ? 0 : n;
+		extern int64_t __stuff_ticks_of(int64_t microseconds);
+		auto n = __stuff_ticks_of(milliseconds());
+		// TODO 有精度丢失吗？
+		return n < 0 ? 0 : static_cast<uint32_t>(n);
 	}
 #endif
 	
-	Duration operator*(double n)                const { return _t * n;              }
-	Duration operator/(double n)                const { return _t / n;              }
+	Duration operator*(double n)                const { return Duration(static_cast<int64_t>(_t * n));  }
+	Duration operator/(double n)                const { return Duration(static_cast<int64_t>(_t / n));  }
 	bool operator<(const Duration& other)       const { return _t < other._t ;      }
 	bool operator>(const Duration& other)       const { return _t > other._t ;      }
 	bool operator==(const Duration& other)      const { return _t == other._t;      }

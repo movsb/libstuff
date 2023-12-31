@@ -27,6 +27,7 @@ void init(const char *setupCode, const char *setupID) {
 		abort();
 	}
 
+	::hap_set_debug_level(HAP_DEBUG_LEVEL_INFO);
 	::hap_set_setup_code(setupCode);
 	::hap_set_setup_id(setupID);
 }

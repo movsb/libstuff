@@ -4,36 +4,33 @@
 #include <inttypes.h>
 #include <assert.h>
 #include <string>
+#include <tuple>
 
 #include "duration.hpp"
-
-extern "C" {
-#if __STUFF_HAS_OS__
-	int32_t __stuff_base_time_os_ticks_of(int64_t milliseconds);
-#endif
-
-#if __STUFF_HAS_UPTIME__
-	int64_t __stuff_base_time_get_uptime();
-#endif
-
-#if __STUFF_HAS_TZ__
-	// from glibc.
-	int  setenv(const char *__string, const char *__value, int __overwrite);
-	void tzset(void);
-#endif
-
-#if __STUFF_HAS_CALENDAR__
-	#if !__STUFF_USE_GET_TIME_OF_DAY__
-		void __stuff_get_calendar(int64_t *seconds, int64_t *microseconds);
-	#endif
-#endif
-}
 
 namespace stuff {
 namespace base {
 namespace time {
 
-#if __STUFF_HAS_CALENDAR__ || __STUFF_HAS_UPTIME__
+#if defined(__STUFF_HAS_UPTIME__)
+	extern int64_t __stuff_get_uptime();
+#endif
+
+#if defined(__STUFF_HAS_TZ__)
+extern "C" {
+	// from glibc.
+	int  setenv(const char *__string, const char *__value, int __overwrite);
+	void tzset(void);
+}
+#endif
+
+#if defined(__STUFF_HAS_CALENDAR__)
+	#if !__STUFF_USE_GET_TIME_OF_DAY__
+		void __stuff_get_calendar(int64_t *seconds, int64_t *microseconds);
+	#endif
+#endif
+
+#if defined(__STUFF_HAS_CALENDAR__) || defined(__STUFF_HAS_UPTIME__)
 
 enum class Month : uint8_t {
 	January     = 1,
@@ -63,10 +60,7 @@ enum class Weekday : uint8_t {
 class Time {
 public:
 	Time() {
-		_sec    = 0;
-		_micro  = 0;
-		_mono   = 0;
-		_offset = 0;
+		reset();
 	}
 
 private:
@@ -76,11 +70,17 @@ private:
 	int64_t     _offset     :7;     // 15m, the number 15 minutes east from UTC, ± 14 hours.
 
 public:
-	bool empty() const { return _sec == 0 && _micro == 0 && _mono == 0; }
+	void reset() {
+		_sec    = 0;
+		_micro  = 0;
+		_mono   = 0;
+		_offset = 0;
+	}
+	bool zero() const { return _sec == 0 && _micro == 0 && _mono == 0; }
 	Time operator+(const Duration &d) const;
 	Duration operator-(const Time& other) const {
 		assert(hasMono() && other.hasMono());
-		return (_mono - other._mono) * Microsecond;
+		return microseconds(_mono - other._mono);
 	}
 	bool operator>(const Time &other) const {
 		if (hasMono() && other.hasMono()) { return _mono > other._mono; }
@@ -130,15 +130,15 @@ private:
 	std::tuple<int, Month, int, int> absDate(uint64_t abs) const;
 };
 
-#if __STUFF_HAS_CALENDAR__
+#if defined(__STUFF_HAS_CALENDAR__)
 Time now();
 #endif
 
-#if __STUFF_HAS_UPTIME__
+#if defined(__STUFF_HAS_UPTIME__)
 Time ticks();
 #endif
 
-#if __STUFF_HAS_TZ__
+#if defined(__STUFF_HAS_TZ__)
 void setTZ(int offset);
 #endif
 
