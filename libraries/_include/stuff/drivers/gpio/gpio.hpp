@@ -35,6 +35,7 @@ public:
 	GPIO(Args&&... args)
 		: _t{args...}
 		{}
+	operator T() const { return _t; }
 
 public:
 	void reset() {
