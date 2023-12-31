@@ -8,7 +8,7 @@
 			"name": "(lldb) 启动",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/build/main",
+			"program": "${workspaceFolder}/tests/build/main",
 			"args": [],
 			"stopAtEntry": false,
 			"cwd": "${fileDirname}",

@@ -8,7 +8,6 @@
                 "/Users/tao/code/espressif/esp-idf/components/newlib/platform_include",
                 "${workspaceFolder}/**",
                 "/Users/tao/code/circuits/playground/build/config",
-                "${workspaceFolder}/modules/displays",
                 "/Users/tao/code/espressif/esp-idf/components/freertos/FreeRTOS-Kernel/include",
             ],
             "defines": [
