@@ -9,6 +9,8 @@ namespace timer {
 namespace internal {
 	struct Wrapper {
 		std::function<void()> callback;
+		bool isTick;
+		TimerHandle_t t;
 	};
 } // namespace internal
 
@@ -16,16 +18,37 @@ namespace internal {
 static void timerHandler(TimerHandle_t handle) {
 	auto w = static_cast<internal::Wrapper*>(pvTimerGetTimerID(handle));
 	auto cb = w->callback;
-	delete w;
-	xTimerDelete(handle, 0);
+	if (!w->isTick) {
+		delete w;
+		xTimerDelete(handle, 0);
+	}
 	cb();
 }
 
-void after(const Duration &duration, std::function<void()> callback) {
+static internal::Wrapper* _startTimer(const char *name, const Duration &duration, std::function<void()> callback, bool isTick) {
 	auto w = new internal::Wrapper;
 	w->callback = callback;
-	TimerHandle_t t = xTimerCreate("after", duration.milliseconds() / portTICK_PERIOD_MS, false, w, timerHandler);
+	w->isTick = isTick;
+	TimerHandle_t t = xTimerCreate(name, duration.milliseconds() / portTICK_PERIOD_MS, isTick, w, timerHandler);
+	w->t = t;
 	xTimerStart(t, 0);
+	return w;
+}
+
+Disposable after(const Duration &duration, std::function<void()> callback) {
+	auto w = _startTimer("after", duration, callback, false);
+	return [=] {
+		xTimerDelete(w->t, 0);
+		delete w;
+	};
+}
+
+Disposable tick(const Duration &duration, std::function<void()> callback) {
+	auto w = _startTimer("tick", duration, callback, true);
+	return [=] {
+		xTimerDelete(w->t, 0);
+		delete w;
+	};
 }
 
 }

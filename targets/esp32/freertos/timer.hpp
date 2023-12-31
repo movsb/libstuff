@@ -15,7 +15,17 @@ namespace timer {
 
 using stuff::base::time::Duration;
 
-void after(const Duration &duration, std::function<void()> callback);
+typedef std::function<void()> Disposable;
+
+/**
+ * @brief 在指定的时长后调用回调函数一次。
+*/
+Disposable after(const Duration &duration, std::function<void()> callback);
+
+/**
+ * @brief 周期地调用指定的函数。
+*/
+Disposable tick(const Duration &duration, std::function<void()> callback);
 
 } // namespace timer
 } // namespace freertos
