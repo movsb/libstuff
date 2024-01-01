@@ -4,19 +4,21 @@
 #include <inttypes.h>
 #include <assert.h>
 #include <chrono>
+#include <limits>
 
 namespace stuff {
 namespace base {
 namespace time {
 
 /**
- * @brief 持续时间，即时长。
+ * @brief 持续时间，即时长。同时也用于表示两个时间值的间隔，可正可负。
  * 
  * 内部暂定用 int64_t 表示，以纳秒为单位。
  * 2^63 nanoseconds to years is 292.2770246269 years
  * 
  * @todo 如何要考虑空间占用，可以用 2^31 表示毫秒，
  *       大概有 2^31 ms to days is 24.8551348148 days
+ *       不是很大，长期任务容易溢出。
 */
 class Duration {
 public:
@@ -98,6 +100,8 @@ namespace literals {
 }
 
 void sleep(const Duration &duration);
+
+const Duration forever = Duration(std::numeric_limits<int64_t>::max());
 
 } // namespace time
 } // namespace base
