@@ -20,6 +20,9 @@ namespace time {
 */
 class Duration {
 public:
+	/**
+	 * @todo 私有化。
+	*/
 	explicit Duration(int64_t nanoseconds) : _t(nanoseconds) {}
 	
 	/**
@@ -94,13 +97,7 @@ namespace literals {
 	using namespace std::literals::chrono_literals;
 }
 
-#if !defined(__STUFF_HAS_SLEEP__)
-	#define __STUFF_HAS_SLEEP__ 1
-#endif
-
-#if __STUFF_HAS_SLEEP__
 void sleep(const Duration &duration);
-#endif
 
 } // namespace time
 } // namespace base
