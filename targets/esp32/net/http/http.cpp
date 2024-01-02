@@ -33,6 +33,8 @@ int Request::read(void *buf, size_t len) {
 void Response::setStatus(status::Code code) {
 	if (::httpd_resp_set_status(_req, status::Status(code)) != ESP_OK) {
 		_failed = true;
+	} else {
+		_statusSet = true;
 	}
 }
 
@@ -44,6 +46,9 @@ void Response::setHeader(const char *const &key, const char *const &value) {
 	esp_err_t err;
 	if (strcasecmp(key, "Content-Type") == 0) {
 		err = ::httpd_resp_set_type(_req, value);
+		if (err == ESP_OK) {
+			_contentTypeSet = true;
+		}
 	} else {
 		err = ::httpd_resp_set_hdr(_req, key, value);
 	}
@@ -55,7 +60,7 @@ void Response::setHeader(const char *const &key, const char *const &value) {
 static const char * defaultContentType = "text/plain; charset=utf-8";
 
 int Response::write(const void *buf, size_t len) {
-	if (len == 0) {
+	if (len == 0 && !_isWritingChunkEnd) {
 		return 0;
 	}
 
@@ -154,6 +159,7 @@ void Server::handle(Method::Value method, const char *path, std::function<Handle
 bool Server::_handle(std::function<HandlerFunc> h, Request &r, Response &w) {
 	h(r, w);
 	if (!w._failed) {
+		w._isWritingChunkEnd = true;
 		w.write("", 0); // 仍然会更新 _failed。
 	}
 	return !w._failed;

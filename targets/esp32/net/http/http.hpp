@@ -63,6 +63,7 @@ public:
 		, _statusSet(false)
 		, _contentTypeSet(false)
 		, _failed(false)
+		, _isWritingChunkEnd(false)
 	{ }
 public:
 	void setStatus(status::Code code);
@@ -86,8 +87,6 @@ public:
 	*/
 	int write(const void *buf, size_t len);
 	int write(const char *buf);
-public:
-	
 private:
 	Server *_server;
 	void *_impl;
@@ -99,6 +98,8 @@ private:
 	 * io.Writer 实现，基本可以不作错误判断了。ESP 要求 handler 返回错误码以关闭连接。
 	*/
 	bool _failed;
+	// 只有在 Server::handle 结束的时候允许写 ChunkEnd，其它时候忽略 write 的空的调用。
+	bool _isWritingChunkEnd;
 };
 
 typedef void HandlerFunc(Request &request, Response &response);
