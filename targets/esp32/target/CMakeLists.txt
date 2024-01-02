@@ -10,7 +10,10 @@
 # set(STUFF_INCLUDES ${STUFF_INCLUDES} ${INC} PARENT_SCOPE)
 
 idf_component_register(
-	SRC_DIRS .. ../freertos
+	SRC_DIRS
+		..
+		../freertos
+		../net/http
 	INCLUDE_DIRS ..
 	REQUIRES app_update esp_https_ota esp_http_server freertos stuff
 )

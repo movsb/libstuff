@@ -106,6 +106,9 @@ std::tuple<Values, bool> parseQuery(const char *query) {
 
 		auto [key, ok1] = queryUnescape(ks, ke);
 		auto [val, ok2] = queryUnescape(vs, ve);
+		if (!ok1 || !ok2) {
+			return { std::move(values), false };
+		}
 		values.set(std::move(key), std::move(val));
 	}
 
