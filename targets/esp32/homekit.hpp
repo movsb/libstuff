@@ -13,24 +13,7 @@ namespace targets {
 namespace esp32 {
 namespace homekit {
 
-void init(const char *setupCode, const char *setupID) {
-	hap_cfg_t cfg;
-	if(::hap_get_config(&cfg) != HAP_SUCCESS) {
-		abort();
-	}
-	cfg.unique_param = UNIQUE_NAME;
-	if (::hap_set_config(&cfg) != HAP_SUCCESS) {
-		abort();
-	}
-
-	if (::hap_init(HAP_TRANSPORT_WIFI) != HAP_SUCCESS) {
-		abort();
-	}
-
-	::hap_set_debug_level(HAP_DEBUG_LEVEL_INFO);
-	::hap_set_setup_code(setupCode);
-	::hap_set_setup_id(setupID);
-}
+void init(const char *setupCode, const char *setupID);
 
 struct CharPtrRef {
 	const char *ptr;
@@ -190,11 +173,11 @@ protected:
 	hap_acc_t *_acc;
 };
 
-void addAccessory(Accessory *accessory) {
+inline void addAccessory(Accessory *accessory) {
 	::hap_add_accessory(*accessory);
 }
 
-void start() {
+inline void start() {
 	if (::hap_start() != HAP_SUCCESS) {
 		abort();
 	}
@@ -247,7 +230,7 @@ protected:
 	std::function<void(bool on)>    _onWriteOn;
 };
 
-void resetPairings() {
+inline void resetPairings() {
 	::hap_reset_pairings();
 }
 

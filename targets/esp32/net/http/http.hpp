@@ -45,7 +45,16 @@ public:
 	{ }
 public:
 	bool getHeader(const char* key, std::string *value);
+	/**
+	 * @brief 读请求的 Body。
+	 * 
+	 * \p read 一次并不能保证读完整个数据，需要多次调用。
+	 * 
+	 * @todo 实现 io.Reader 接口。
+	*/
 	int read(void *buf, size_t len);
+	template<std::size_t N>
+	int read(char (&buf)[N]) { return read(buf, N); }
 private:
 	Server *_server;
 	void *_impl;
@@ -87,6 +96,9 @@ public:
 	*/
 	int write(const void *buf, size_t len);
 	int write(const char *buf);
+	int write(const std::string &buf) {
+		return write(buf.c_str(), buf.size());
+	}
 private:
 	Server *_server;
 	void *_impl;
