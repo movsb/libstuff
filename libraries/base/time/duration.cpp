@@ -16,6 +16,18 @@ void sleep(const Duration &duration) {
 	__stuff_sleep_us(duration.microseconds());
 }
 
+void after(const Duration &duration, std::function<void()> callback) {
+	sleep(duration);
+	callback();
+}
+
+void tick(const Duration &duration, std::function<void()> callback) {
+	while((1)) {
+		sleep(duration);
+		callback();
+	}
+}
+
 } // namespace time
 } // namespace base
 } // namespace stuff

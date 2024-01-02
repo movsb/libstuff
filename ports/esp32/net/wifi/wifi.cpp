@@ -39,9 +39,22 @@ static void _init_wifi() {
  * 
 */
 static void _update_wifi_mode(wifi_mode_t mode, bool enable) {
+	auto modeText = [](wifi_mode_t mode) {
+		#define _XX(m) case m: return #m
+		switch (mode) {
+			_XX(WIFI_MODE_NULL);
+			_XX(WIFI_MODE_AP);
+			_XX(WIFI_MODE_STA);
+			_XX(WIFI_MODE_APSTA);
+			default: break;
+		}
+		#undef _XX
+		return "";
+	};
+	
 	wifi_mode_t old_mode;
 	ESP_ERROR_CHECK(esp_wifi_get_mode(&old_mode));
-	ESP_LOGI(TAG, "current wifi mode [%d]", old_mode);
+	ESP_LOGI(TAG, "current wifi mode: %s", modeText(old_mode));
 
 	bool hasSTA = false, hasAP = false;
 
@@ -64,7 +77,7 @@ static void _update_wifi_mode(wifi_mode_t mode, bool enable) {
 	else if (hasSTA)        { mode = WIFI_MODE_STA;     }
 	else                    { mode = WIFI_MODE_NULL;    }
 	
-	ESP_LOGI(TAG, "Setting wifi mode: %d", mode);
+	ESP_LOGI(TAG, "Setting wifi mode: %s", modeText(mode));
 	ESP_ERROR_CHECK(esp_wifi_set_mode(mode));
 }
 
@@ -209,7 +222,7 @@ public:
 		_init();
 	}
 	virtual ~AccessPoint() {
-		// _uninit();
+		_uninit();
 	}
 public:
 	virtual int start(const char *ssid, const char *password) override {
@@ -256,22 +269,20 @@ protected:
 		_init_wifi();
 		ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &_eventHandler, this));
 	}
-	/*
 	void _uninit(void) {
-		esp_err_t err = esp_wifi_stop();
-		if (err == ESP_ERR_WIFI_NOT_INIT) {
-			return;
-		}
-		ESP_ERROR_CHECK(err);
+		// esp_err_t err = esp_wifi_stop();
+		// if (err == ESP_ERR_WIFI_NOT_INIT) {
+		// 	return;
+		// }
+		// ESP_ERROR_CHECK(err);
 
 		ESP_ERROR_CHECK(esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &_eventHandler));
 
-		ESP_ERROR_CHECK(esp_wifi_deinit());
+		// ESP_ERROR_CHECK(esp_wifi_deinit());
 	}
-	*/
 private:
 	static void _eventHandler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
-		auto that = reinterpret_cast<AccessPoint*>(arg);
+		auto that = static_cast<AccessPoint*>(arg);
 		return that->eventHandler(event_base, event_id, event_data);
 	}
 	void eventHandler(esp_event_base_t event_base,int32_t event_id, void *event_data) {
@@ -290,7 +301,7 @@ _AccessPoint* __new_access_point() {
 }
 
 void __delete_access_point(_AccessPoint* ap) {
-	delete reinterpret_cast<::AccessPoint*>(ap);
+	delete static_cast<::AccessPoint*>(ap);
 }
 
 }

@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <chrono>
 #include <limits>
+#include <functional>
 
 namespace stuff {
 namespace base {
@@ -99,10 +100,29 @@ namespace literals {
 	using namespace std::literals::chrono_literals;
 }
 
+/**
+ * @brief 在当前任务中睡眠指定的时长。
+ * 
+ * @note \p forever 可以永久睡眠。
+ * @note 永久是多久？根据实现定义。
+*/
 void sleep(const Duration &duration);
 
 const Duration forever = Duration(std::numeric_limits<int64_t>::max());
 
+/**
+ * @brief 在指定的时长后调用回调函数一次。
+ * @note 回调函数会在指定的时间到达后在当前任务中执行。
+ *          如果不希望如此，可以考虑 timer::after。
+*/
+void after(const Duration &duration, std::function<void()> callback);
+
+/**
+ * @brief 周期地调用指定的函数。
+ * @note 回调函数会在指定的时间到达后在当前任务中执行。
+ *          如果不希望如此，可以考虑 timer::tick。
+*/
+void tick(const Duration &duration, std::function<void()> callback);
 } // namespace time
 } // namespace base
 } // namespace stuff
