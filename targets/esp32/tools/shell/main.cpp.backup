@@ -1,0 +1,40 @@
+#include "shell.hpp"
+
+KnownCommand knownCommands[] = {
+	{
+		.name           = "uptime",
+		.description    = "显示系统已运行的时间",
+		.help           = "",
+		.execute        = [](const char **args) -> std::string { return ""; } 
+	},
+	{
+		.name = nullptr,
+	}
+};
+
+int main() {
+	auto shell = new Shell(
+		knownCommands,
+		[](const char* error){
+			printf("Error: %s\n", error);
+		}
+	);
+	
+	char buf[1024];
+	auto n = fread(buf, 1, 1023, stdin);
+	buf[n] = '\0';
+	
+	shell->eval(buf, [](const char *data){
+		printf("%s", data);
+	});
+	
+	// printf("buf: %s\n", buf);
+	
+	// SimpleCommand cmd;
+	// if (shell->parse(buf, &cmd)) {
+	// 	printf("[%s]\n", cmd.name);
+	// 	for (int i = 0; cmd.args[i]; i++) {
+	// 		printf("Args: [%s]\n", cmd.args[i]);
+	// 	}
+	// }
+}

@@ -109,6 +109,8 @@ public:
 	int     second()        const { return int(abs() % 60);                     }
 	int     microsecond()   const { return _micro; }
 	int     nanosecond()    const { return 0;      }
+
+	int     days()          const { return _sec / 60 / 60/ 24; }
 	
 	std::string toString() const {
 		auto t = _sec * 1000000 + _micro;

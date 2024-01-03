@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+<style>
+#outputs, .input, #input {
+	font-family: monospace;
+	line-height: 1.5em;
+}
+#input {
+	line-height: 1.5em;
+	outline: none;
+}
+div.input {
+	display: flex;
+}
+#input {
+	flex: 1;
+	border-bottom: 1px solid gray;
+}
+.line pre {
+	margin: 0;
+}
+red     { color: red; }
+green   { color: green; }
+blue    { color: blue; }
+</style>
+</head>
+<body>
+<div id="terminal">
+	<div class="banner">
+		<h2>桃子的迷你终端</h2>
+		<p>输入 <code>help</code> 可以查看命令列表。</p>
+	</div>
+	<div id="outputs">
+		
+	</div>
+	<div class="input">
+		<span class="prompt">$&nbsp;</span>
+		<span id="input" contenteditable></span>
+	</div>
+</div>
+<script>
+
+let lastCommandReturned = true;
+
+function execute(input, callback) {
+	append(input, true);
+	
+	lastCommandReturned = false;
+	
+	try {
+		fetch("/eval", {
+			method: "POST",
+			body: input,
+		}).then(function(r){
+			if (!r.ok) {
+				alert(r.statusText);
+				lastCommandReturned = true;
+				callback();
+				return;
+			}
+			r.text().then(function(t) {
+				append(t, false);
+				lastCommandReturned = true;
+				callback();
+			});
+		});
+	} catch (e) {
+		lastCommandReturned = true;
+		append(`<red>${e}</red>`, false);
+	}
+}
+
+function append(content, isInput) {
+	let html = isInput ? `
+<div class=block>
+<div class=line>
+	<span class=prompt>$ </span>
+	<span class=command>${content}</span>
+</div>
+` : `
+<div class=line>
+${ content ? '<pre>'+content+'</pre>' : '' }
+</div>
+</div>
+`;
+
+	outputs.innerHTML += html;
+}
+
+let isMobile = /(iPhone|Android|iOS|Mobile)/i.test(navigator.userAgent);
+
+let historyCommands = [];
+let historyCommandIndex = -1;
+
+let input = document.getElementById("input");
+let outputs = document.getElementById("outputs");
+input.addEventListener('keypress', function(e) {
+	if (e.key == 'Enter') {
+		if (!lastCommandReturned) {
+			e.preventDefault();
+			return;
+		}
+		let raw = input.innerText;
+		input.innerText = "";
+		let trimmed = raw.trim();
+		execute(trimmed, function() {
+			// 手机上会乱滚动，先禁用。
+			if (!isMobile) {
+				input.scrollIntoView();
+			}
+		});
+		if (trimmed != "") {
+			historyCommands.push(raw);
+			historyCommandIndex = historyCommands.length;
+		}
+		e.preventDefault();
+	}
+})
+input.addEventListener('keydown', function(e) {
+	if (e.key == 'ArrowUp' || e.key == 'ArrowDown'
+		|| e.ctrlKey && e.key == 'n'
+		|| e.ctrlKey && e.key == 'p')
+	{
+		let isUp = e.key == 'ArrowUp' || e.key == 'p';
+		historyCommandIndex += isUp ? -1 : +1;
+		historyCommandIndex = Math.max(historyCommandIndex, 0);
+		historyCommandIndex = Math.min(historyCommandIndex, historyCommands.length);
+		input.innerText = historyCommandIndex <= historyCommands.length-1
+			? historyCommands[historyCommandIndex] : "";
+		e.preventDefault();
+	}
+});
+
+input.focus();
+
+</script>
+</body>
+</html>

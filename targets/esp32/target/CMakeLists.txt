@@ -11,9 +11,12 @@ idf_component_register(
 		../freertos
 		../net/http
 		../storage/nvs
+		../tools/shell
 	INCLUDE_DIRS ..
 	REQUIRES app_update esp_https_ota esp_http_server freertos stuff
 		nvs_flash
 		esp_hap_apple_profiles
 		esp_hap_core
+	EMBED_TXTFILES
+		../tools/shell/shell.html
 )
