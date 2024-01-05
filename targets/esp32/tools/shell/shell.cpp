@@ -48,8 +48,9 @@ void Shell::eval(char *script, Output output) {
 		}
 		for (auto p = _known; p->name; p++) {
 			if (cmd.name == p->name) {
-				auto body = p->execute(cmd.args);
-				output(body.c_str());
+				Writer w;
+				w._output = output;
+				p->execute(cmd.args, w);
 				return;
 			}
 		}
@@ -104,9 +105,10 @@ void Shell::_next() {
 	_expectWS = false;
 	return _next2();
 }
+
 void Shell::_next2() {
 	auto isAlnum = [](char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'); };
-	auto isAllowed = [isAlnum](char c) { return isAlnum(c) || c == '-' || c == '.' || c == '_' || c > 127; };
+	auto isAllowed = [isAlnum](char c) { return isAlnum(c) || c == '-' || c == '.' || c == '_' || c == '*' || c > 127; };
 
 	if (isAllowed(*_p)) {
 		_tks = _p;

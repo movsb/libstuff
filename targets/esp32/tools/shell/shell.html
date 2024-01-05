@@ -25,6 +25,21 @@ div.input {
 red     { color: red; }
 green   { color: green; }
 blue    { color: blue; }
+
+th, td {
+	border: 1px solid darkgray;
+	padding: 2px 8px;
+	border-collapse: collapse;
+}
+table {
+	border-collapse: collapse;
+	margin: 8px 0;
+}
+td.cut {
+	text-overflow: ellipsis;
+	overflow: hidden;
+	max-width: 16em;
+}
 </style>
 </head>
 <body>
@@ -45,28 +60,26 @@ blue    { color: blue; }
 
 let lastCommandReturned = true;
 
-function execute(input, callback) {
+async function execute(input, callback) {
 	append(input, true);
 	
 	lastCommandReturned = false;
 	
 	try {
-		fetch("/eval", {
+		let r = await fetch("/eval", {
 			method: "POST",
 			body: input,
-		}).then(function(r){
-			if (!r.ok) {
-				alert(r.statusText);
-				lastCommandReturned = true;
-				callback();
-				return;
-			}
-			r.text().then(function(t) {
-				append(t, false);
-				lastCommandReturned = true;
-				callback();
-			});
 		});
+		if (!r.ok) {
+			alert(r.statusText);
+			lastCommandReturned = true;
+			callback();
+			return;
+		}
+		let t = await r.text();
+		append(t, false);
+		lastCommandReturned = true;
+		callback();
 	} catch (e) {
 		lastCommandReturned = true;
 		append(`<red>${e}</red>`, false);
@@ -97,26 +110,28 @@ let historyCommandIndex = -1;
 
 let input = document.getElementById("input");
 let outputs = document.getElementById("outputs");
-input.addEventListener('keypress', function(e) {
+input.addEventListener('keypress', async function(e) {
 	if (e.key == 'Enter') {
+		e.preventDefault();
 		if (!lastCommandReturned) {
-			e.preventDefault();
 			return;
 		}
 		let raw = input.innerText;
-		input.innerText = "";
 		let trimmed = raw.trim();
-		execute(trimmed, function() {
+		if (!isMobile) {
+			input.scrollIntoView();
+		}
+		await execute(trimmed, function() {
 			// 手机上会乱滚动，先禁用。
 			if (!isMobile) {
 				input.scrollIntoView();
 			}
+			input.innerText = "";
 		});
 		if (trimmed != "") {
 			historyCommands.push(raw);
 			historyCommandIndex = historyCommands.length;
 		}
-		e.preventDefault();
 	}
 })
 input.addEventListener('keydown', function(e) {

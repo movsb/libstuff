@@ -49,26 +49,41 @@ struct SimpleCommand {
 	Args            args;
 };
 
+typedef std::function<void(const char *output)> Output;
+
+struct Writer {
+	void write(const char *s) {
+		_output(s);
+	}
+	void write(const std::string& s) {
+		_output(s.c_str());
+	}
+private:
+	friend class Shell;
+	Output _output;
+};
+
 struct KnownCommand {
 	const char *name;
 	const char *description;
 	const char *help;
-	std::string (*execute)(const Args& args);
+	void (*execute)(const Args& args, Writer &writer);
 };
 
 class Shell {
 public:
-	Shell(
-		KnownCommand *known_commands,
-		std::function<void(const char *)> error)
-		: _error(error)
-		, _known(known_commands)
+	Shell(KnownCommand *knownCommands, std::function<void(const char *)> error)
+		: _error(error) , _known(knownCommands)
 		{}
 public:
-	typedef std::function<void(const char *output)> Output;
+	/**
+	 * @brief 解析并执行一段命令脚本。
+	 * 
+	 * @note  为了省内存，内部会原地修改 script 指向的内存，需是可写的。
+	*/
 	void eval(char *script, Output output);
-	bool parse(char *script, SimpleCommand *out);
 private:
+	bool parse(char *script, SimpleCommand *cmd);
 	void help(Output output, const Args &args);
 private:
 	void _next();
