@@ -51,6 +51,7 @@ bool NonVolatileStorage::get(const char* key, std::string *value) {
 
 void NonVolatileStorage::set(const char *key, const char *value) {
 	ESP_ERROR_CHECK(::nvs_set_str(_nvs_handle, key, value));
+	commit();
 }
 
 /**

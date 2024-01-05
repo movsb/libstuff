@@ -54,6 +54,9 @@ public:
 public:
 	bool get(const char* key, std::string *value);
 	void set(const char* key, const char *value);
+	/**
+	 * @note 默认会 commit。
+	*/
 	void set(const char* key, const std::string &value) {
 		return set(key, value.c_str());
 	}
