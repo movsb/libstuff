@@ -20,7 +20,7 @@ static void timerHandler(TimerHandle_t handle) {
 	auto cb = w->callback;
 	if (!w->isTick) {
 		delete w;
-		xTimerDelete(handle, 0);
+		xTimerDelete(handle, portMAX_DELAY);
 	}
 	cb();
 }
@@ -31,14 +31,14 @@ static internal::Wrapper* _startTimer(const char *name, const Duration &duration
 	w->isTick = isTick;
 	TimerHandle_t t = xTimerCreate(name, duration.milliseconds() / portTICK_PERIOD_MS, isTick, w, timerHandler);
 	w->t = t;
-	xTimerStart(t, 0);
+	xTimerStart(t, portMAX_DELAY);
 	return w;
 }
 
 Disposable after(const Duration &duration, std::function<void()> callback) {
 	auto w = _startTimer("after", duration, callback, false);
 	return [=] {
-		xTimerDelete(w->t, 0);
+		xTimerDelete(w->t, portMAX_DELAY);
 		delete w;
 	};
 }
@@ -46,7 +46,7 @@ Disposable after(const Duration &duration, std::function<void()> callback) {
 Disposable tick(const Duration &duration, std::function<void()> callback) {
 	auto w = _startTimer("tick", duration, callback, true);
 	return [=] {
-		xTimerDelete(w->t, 0);
+		xTimerDelete(w->t, portMAX_DELAY);
 		delete w;
 	};
 }

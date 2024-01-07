@@ -263,6 +263,13 @@ public:
 		_update_wifi_mode(WIFI_MODE_AP, false);
 		return 0;
 	}
+	virtual std::size_t stations() override {
+		wifi_sta_list_t li;
+		if (esp_wifi_ap_get_sta_list(&li) == ESP_OK) {
+			return std::size_t(li.num);
+		}
+		return 0;
+	}
 
 protected:
 	void _init() {

@@ -24,7 +24,7 @@ static void _init() {
 
 NonVolatileStorage::NonVolatileStorage() {
 	_init();
-	ESP_ERROR_CHECK(::nvs_open("nvs", NVS_READWRITE, reinterpret_cast<nvs_handle*>(&_impl)));
+	ESP_ERROR_CHECK(::nvs_open(NVS_DEF_NS, NVS_READWRITE, reinterpret_cast<nvs_handle*>(&_impl)));
 }
 NonVolatileStorage::~NonVolatileStorage() {
 	commit();
@@ -49,6 +49,31 @@ bool NonVolatileStorage::get(const char* key, std::string *value) {
 	return true;
 }
 
+bool NonVolatileStorage::get(const char* key, bool useDef, std::string*value) {
+	if (get(key, value)) {
+		return true;
+	}
+	if (useDef) {
+		auto d = findDefault(key, Value::SZ);
+		*value = d.s;
+		return true;
+	}
+	return false;
+}
+
+bool NonVolatileStorage::get(const char* key, bool useDef, uint8_t *value) {
+	auto err = ::nvs_get_u8(_nvs_handle, key, value);
+	if (err == ESP_OK) { return true; }
+	else if (err == ESP_ERR_NVS_NOT_FOUND) {
+		if (useDef) {
+			auto d = findDefault(key, Value::U8);
+			*value = static_cast<uint8_t>(d.u);
+			return true;
+		}
+	}
+	return false;
+}
+
 void NonVolatileStorage::set(const char *key, const char *value) {
 	ESP_ERROR_CHECK(::nvs_set_str(_nvs_handle, key, value));
 	commit();
@@ -59,7 +84,7 @@ void NonVolatileStorage::set(const char *key, const char *value) {
  * 
  * 只支持 * 号。
 */
-static bool _match(const char *pattern, const char *input) {
+bool match(const char *pattern, const char *input) {
 	if (!*pattern) {
 		if (!*input) {
 			return true;
@@ -68,12 +93,12 @@ static bool _match(const char *pattern, const char *input) {
 	}
 	if (*pattern != '*') {
 		if (*pattern == *input) {
-			return _match(pattern+1, input+1);
+			return match(pattern+1, input+1);
 		}
 		return false;
 	}
 	for (int i = 0; i <= std::strlen(input); i++) {
-		if (_match(pattern+1, input+i)) {
+		if (match(pattern+1, input+i)) {
 			return true;
 		}
 	}
@@ -131,7 +156,7 @@ void NonVolatileStorage::each(const char* part, const char* ns, const char* keyL
 	std::unordered_map<PNN, Handle, PNN::Hasher> _handles;
 	
 	auto err = ::__nvs_for_each(part, ns, [&](const char* part, const char* ns, const char* key, __nvs_ItemType ty) {
-		if (_match(keyLike, key)) {
+		if (match(keyLike, key)) {
 			_tmp.emplace_back(part, ns, key, ty);
 		}
 	});
@@ -207,67 +232,6 @@ void NonVolatileStorage::each(const char* part, const char* ns, const char* keyL
 	}
 }
 
-const char* Value::typeString() const {
-	switch (ty) {
-		case I8:    return "int8";
-		case I16:   return "int16";
-		case I32:   return "int32";
-		case I64:   return "int64";
-		case U8:    return "uint8";
-		case U16:   return "uint16";
-		case U32:   return "uint32";
-		case U64:   return "uint64";
-		case SZ:    return "string";
-		case BLOB:  return "blob";
-		default:    return "unknown";
-	}
-}
-
-std::string Value::toString() const {
-	std::string t;
-	char buf[64];
-	switch (ty) {
-	case Value::I8:
-	case Value::I16:
-	case Value::I32:
-	case Value::I64:
-		std::snprintf(buf, sizeof(buf), "%lld", i);
-		t = buf;
-		break;
-	case Value::U8:
-	case Value::U16:
-	case Value::U32:
-	case Value::U64:
-		std::snprintf(buf, sizeof(buf), "%llu", u);
-		t = buf;
-		break;
-	case Value::SZ:
-		t = s;
-		break;
-	case Value::BLOB:
-		{
-			auto toHex = [](uint8_t n) {
-				return n <= 9
-					? n -  0 + '0'
-					: n - 10 + 'A';
-			};
-
-			t.resize(blob.size*2);
-			char *p = &t[0];
-			for (size_t i = 0; i < blob.size; i++) {
-				auto b = static_cast<const uint8_t*>(blob.d)[i];
-				p[0] = toHex(b >> 4);
-				p[1] = toHex(b & 15);
-				p += 2;
-			}
-			break;
-		}
-	default:
-		t = "(?:unknown_value_type)";
-	}
-	return std::move(t);
-};
-	
 } // namespace nvs
 } // namespace storage
 } // namespace esp32
