@@ -5,8 +5,9 @@ project(stuff)
 add_subdirectory(base)
 add_subdirectory(drivers)
 add_subdirectory(net)
+add_subdirectory(modules)
 
-add_library(stuff STATIC ${LIB_SRCS})
+add_library(stuff STATIC ${LIB_SRCS} ${STUFF_SRCS})
 target_include_directories(stuff PRIVATE _include)
 
 file(GLOB INC _include)

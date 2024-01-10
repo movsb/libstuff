@@ -4,8 +4,6 @@
 #include <string>
 #include <cstring>
 #include <cmath>
-#include <bitset>
-#include <map>
 
 #include "keycode.hpp"
 

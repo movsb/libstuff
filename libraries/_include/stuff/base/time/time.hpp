@@ -144,8 +144,10 @@ Time ticks();
 void setTZ(int offset);
 #endif
 
+#if defined(__STUFF_HAS_CALENDAR__)
 inline Duration since(const Time& past)    { return now() - past;      }
 inline Duration until(const Time& future)  { return future - now();    }
+#endif
 
 #endif // __STUFF_HAS_CALENDAR__ || __STUFF_HAS_UPTIME__
 
