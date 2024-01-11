@@ -1,5 +1,3 @@
-#pragma once
-
 namespace stuff {
 namespace net {
 namespace wifi {

@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <cstring>
 
-#include <stuff/net/wifi.hpp>
+#include <stuff/net/wifi/wifi.hpp>
 
 #define GOT_IPV4_BIT BIT(0)
 #define CONNECTED_BITS (GOT_IPV4_BIT)

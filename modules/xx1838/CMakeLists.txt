@@ -1,6 +1,6 @@
 stuff_add_sources(
 	${CMAKE_CURRENT_LIST_DIR}
-	decoer.cpp
+	decoder.cpp
 	keycode.cpp
 )
 

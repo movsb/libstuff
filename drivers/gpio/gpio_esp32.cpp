@@ -1,12 +1,14 @@
-#include <stuff/ports/esp32/drivers/gpio/gpio.hpp>
+#include <stuff/drivers/gpio/gpio.hpp>
 
 #include <driver/gpio.h>
 
 namespace stuff {
 namespace drivers {
 namespace gpio {
+namespace __abstract {
 
 void __stuff_reset(const gpio_num_t &num) {
+
 }
 
 void __stuff_set_direction(const gpio_num_t &num, Direction::Value direction) {
@@ -40,6 +42,8 @@ void __stuff_set_value(const gpio_num_t &num, bool value) {
 bool __stuff_get_value(const gpio_num_t &num) {
 	return ::gpio_get_level(num) > 0;
 }
+
+} // namespace __abstract
 
 } // namespace gpio
 } // namespace drivers

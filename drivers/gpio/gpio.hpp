@@ -28,6 +28,8 @@ struct Pull {
 	};
 };
 
+namespace __abstract {
+
 template<typename T>
 class GPIO {
 public:
@@ -63,6 +65,8 @@ protected:
 	T _t;
 };
 
+} // namespace __abstract
+	
 }
 }
 }
