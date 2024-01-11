@@ -44,6 +44,12 @@ endforeach()
 add_library(stuff STATIC ${__STUFF_SRCS})
 target_include_directories(stuff PRIVATE ${__sb}/_include)
 
+function(stuff_set_port_includes)
+	foreach(inc ${ARGN})
+		target_include_directories(stuff PRIVATE ${inc})
+	endforeach()
+endfunction()
+
 function(stuff_init_target cmakeTarget)
 	target_link_libraries(${cmakeTarget} stuff)
 	target_include_directories(${cmakeTarget} PRIVATE ${__sb}/_include)
