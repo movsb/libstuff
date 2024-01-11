@@ -14,8 +14,11 @@ namespace time {
 /**
  * @brief 持续时间，即时长。同时也用于表示两个时间值的间隔，可正可负。
  * 
- * 内部暂定用 int64_t 表示，以纳秒为单位。
- * 2^63 nanoseconds to years is 292.2770246269 years
+ * 内部暂定用 int64_t 表示，以微秒为单位。同时可以避免在不支持除法指令的 CPU 上
+ * 生成 __divdi3 方法（软件除法），会占用若干 KB 的空间。不划算。
+ * 
+ * 2^63 nanoseconds  to years is 292.2770246269     years
+ * 2^63 microseconds to years is 292,277.0246269277 years
  * 
  * @todo 如何要考虑空间占用，可以用 2^31 表示毫秒，
  *       大概有 2^31 ms to days is 24.8551348148 days
@@ -26,7 +29,11 @@ public:
 	/**
 	 * @todo 私有化。
 	*/
-	explicit Duration(int64_t nanoseconds) : _t(nanoseconds) {}
+#ifdef __STUFF_DURATION_NANO__
+	explicit Duration(int64_t nanoseconds)  : _t(nanoseconds) {}
+#else
+	explicit Duration(int64_t microseconds) : _t(microseconds) {}
+#endif
 	
 	/**
 	 * @brief 支持 1s, 1ms 1.1s 这类的带单位的表示法初始化，简化书写。
@@ -36,10 +43,20 @@ public:
 	 */
 	template<typename Rep, typename Period>
 	Duration(const std::chrono::duration<Rep, Period> &duration) :
-		_t(std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count()) {}
+		_t(std::chrono::duration_cast<
+#ifdef __STUFF_DURATION_NANO__
+			std::chrono::nanoseconds
+#else
+			std::chrono::microseconds
+#endif
+		>(duration).count()) {}
 
+#ifdef __STUFF_DURATION_NANO__
 	int64_t nanoseconds()   const { return _t;                          }
 	int64_t microseconds()  const { return nanoseconds()    / 1000;     }
+#else
+	int64_t microseconds()  const { return _t;                          }
+#endif
 	int64_t milliseconds()  const { return microseconds()   / 1000;     }
 	double  seconds()       const { return milliseconds()   / 1000.0;   }
 	double  minutes()       const { return seconds()        / 60.0;     }
@@ -72,15 +89,13 @@ protected:
 inline Duration operator*(double n, const Duration &duration) { return duration * n; }
 inline Duration operator/(double n, const Duration &duration) { return duration / n; }
 
-inline Duration nanoseconds (int64_t n) { return Duration       (n * 1);    }
-inline Duration microseconds(int64_t n) { return nanoseconds    (n * 1000); }
-inline Duration milliseconds(int64_t n) { return microseconds   (n * 1000); }
-
-// 会与 double 重载函数冲突。
-// inline Duration seconds     (int64_t n) { return milliseconds   (n * 1000); }
-// inline Duration minutes     (int64_t n) { return seconds        (n * 60);   }
-// inline Duration hours       (int64_t n) { return minutes        (n * 60);   }
-// inline Duration days        (int64_t n) { return hours          (n * 24);   }
+#ifdef __STUFF_DURATION_NANO__
+	inline Duration nanoseconds (int64_t n) { return Duration       (n * 1);    }
+	inline Duration microseconds(int64_t n) { return nanoseconds    (n * 1000); }
+#else
+	inline Duration microseconds(int64_t n) { return Duration(n);               }
+#endif
+	inline Duration milliseconds(int64_t n) { return microseconds   (n * 1000); }
 
 // 使用 double 会增加 2KB 的 .text（软件浮点运算情况下）。
 // 当然，除非完全不使用 double 表达式，否则是非常难以避免的，
@@ -91,7 +106,9 @@ inline Duration hours       (double n)  { return minutes        (n * 60);   }
 inline Duration days        (double n)  { return hours          (n * 24);   }
 
 // 一些常用的别名
+#ifdef __STUFF_DURATION_NANO__
 inline Duration ns          (int64_t n) { return nanoseconds(n);    }
+#endif
 inline Duration us          (int64_t n) { return microseconds(n);   }
 inline Duration ms          (int64_t n) { return milliseconds(n);   }
 
