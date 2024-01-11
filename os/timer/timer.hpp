@@ -2,10 +2,7 @@
 
 #include <functional>
 
-#include <freertos/FreeRTOS.h>
-#include <freertos/timers.h>
-
-#include <stuff/base/time/duration.hpp>
+#include <stuff/base/time.hpp>
 
 namespace stuff {
 namespace os {

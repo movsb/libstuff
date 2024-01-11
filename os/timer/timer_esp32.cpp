@@ -1,5 +1,8 @@
 #include "timer.hpp"
 
+#include <freertos/FreeRTOS.h>
+#include <freertos/timers.h>
+
 namespace stuff {
 namespace os {
 namespace timer {

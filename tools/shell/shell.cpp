@@ -1,8 +1,6 @@
 #include "shell.hpp"
 #include <cstring>
 
-#include <esp_log.h>
-
 namespace stuff {
 namespace tools {
 namespace shell {
@@ -106,7 +104,7 @@ void Shell::_next() {
 
 void Shell::_next2() {
 	auto isAlnum = [](char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'); };
-	auto isAllowed = [isAlnum](char c) { return isAlnum(c) || c == '-' || c == '.' || c == '_' || c == '*' || c > 127; };
+	auto isAllowed = [isAlnum](char c) { return isAlnum(c) || c == '-' || c == '.' || c == '_' || c == '*' || int(c) > 127; };
 
 	if (isAllowed(*_p)) {
 		_tks = _p;
