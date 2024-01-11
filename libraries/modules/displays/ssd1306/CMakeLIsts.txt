@@ -1,1 +1,0 @@
-add_library(ssd1306 font.cpp ssd1306.cpp)

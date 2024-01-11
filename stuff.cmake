@@ -1,7 +1,0 @@
-function(stuff_init cmakeTarget)
-	message("TEST:" ${CMAKE_CURRENT_FUNCTION_LIST_DIR}/libraries)
-	add_subdirectory(${CMAKE_CURRENT_FUNCTION_LIST_DIR}/libraries stuff)
-	target_link_libraries(${cmakeTarget} stuff)
-	message(${cmakeTarget} "STUFF_INCLUDES:" ${STUFF_INCLUDES})
-	target_include_directories(${cmakeTarget} PRIVATE ${STUFF_INCLUDES})
-endfunction()

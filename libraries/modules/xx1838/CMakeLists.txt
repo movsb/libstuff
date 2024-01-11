@@ -1,2 +1,0 @@
-file(GLOB SRCS *cpp)
-set(STUFF_SRCS ${STUFF_SRCS} ${SRCS} PARENT_SCOPE)
