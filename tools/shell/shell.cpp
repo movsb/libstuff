@@ -4,8 +4,6 @@
 #include <esp_log.h>
 
 namespace stuff {
-namespace targets {
-namespace esp32 {
 namespace tools {
 namespace shell {
 	
@@ -144,6 +142,4 @@ void Shell::_next2() {
 
 } // namespace shell
 } // namespace tools
-} // namespace esp32
-} // namespace targets
 } // namespace stuff

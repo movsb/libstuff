@@ -1,8 +1,7 @@
 #include "homekit.hpp"
 
 namespace stuff {
-namespace targets {
-namespace esp32 {
+namespace protos {
 namespace homekit {
 
 void init(const char *setupCode, const char *setupID) {
@@ -25,7 +24,6 @@ void init(const char *setupCode, const char *setupID) {
 }
 
 
-}
 }
 }
 }

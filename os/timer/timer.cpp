@@ -1,9 +1,7 @@
 #include "timer.hpp"
 
 namespace stuff {
-namespace targets {
-namespace esp32 {
-namespace freertos {
+namespace os {
 namespace timer {
 
 namespace internal {
@@ -51,8 +49,6 @@ Disposable tick(const Duration &duration, std::function<void()> callback) {
 	};
 }
 
-}
-}
 }
 }
 }

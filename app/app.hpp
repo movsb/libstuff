@@ -5,8 +5,6 @@
 #include <esp_ota_ops.h>
 
 namespace stuff {
-namespace targets {
-namespace esp32 {
 namespace app {
 
 inline const char* projectName() {
@@ -35,7 +33,5 @@ protected:
 	Arch::Value _arch;
 };
 
-}
-}
 }
 }

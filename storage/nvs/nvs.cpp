@@ -8,8 +8,6 @@
 #include <vector>
 
 namespace stuff {
-namespace targets {
-namespace esp32 {
 namespace storage {
 namespace nvs {
 
@@ -234,6 +232,4 @@ void NonVolatileStorage::each(const char* part, const char* ns, const char* keyL
 
 } // namespace nvs
 } // namespace storage
-} // namespace esp32
-} // namespace targets
 } // namespace stuff

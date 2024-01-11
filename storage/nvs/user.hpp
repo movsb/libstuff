@@ -3,8 +3,6 @@
 #include "value.hpp"
 
 namespace stuff {
-namespace targets {
-namespace esp32 {
 namespace storage {
 namespace nvs {
 namespace user {
@@ -26,8 +24,6 @@ inline const Default last() {
 }
 
 } // namespace user
-}
-}
 }
 }
 }

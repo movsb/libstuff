@@ -8,9 +8,7 @@
 #include <stuff/base/time/duration.hpp>
 
 namespace stuff {
-namespace targets {
-namespace esp32 {
-namespace freertos {
+namespace os {
 namespace timer {
 
 using stuff::base::time::Duration;
@@ -32,7 +30,5 @@ Disposable after(const Duration &duration, std::function<void()> callback);
 Disposable tick(const Duration &duration, std::function<void()> callback);
 
 } // namespace timer
-} // namespace freertos
-} // namespace esp32
-} // namespace targets
+} // namespace os
 } // namespace stuff

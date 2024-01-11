@@ -38,6 +38,7 @@ foreach(sub ${subDirs})
 endforeach()
 
 message("STUFF_SRCS:" ${__STUFF_SRCS})
+message("STUFF_INC:" ${__sb}/_include)
 
 idf_component_register(
 	SRCS ${__STUFF_SRCS}

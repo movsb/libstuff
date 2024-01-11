@@ -9,8 +9,6 @@
 #include <esp_ota_ops.h>
 
 namespace stuff {
-namespace targets {
-namespace esp32 {
 namespace app {
 
 static const char endpoint[] = "http://hub.home.twofei.com/v1/ota/firmware";
@@ -43,7 +41,5 @@ void OTA::execute(std::function<void()> fn) {
 	}
 }
 
-}
-}
 }
 }

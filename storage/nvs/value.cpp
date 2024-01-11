@@ -4,8 +4,6 @@
 #include <vector>
 
 namespace stuff {
-namespace targets {
-namespace esp32 {
 namespace storage {
 namespace nvs {
 
@@ -72,6 +70,4 @@ std::string Value::toString() const {
 	
 } // namespace nvs
 } // namespace storage
-} // namespace esp32
-} // namespace targets
 } // namespace stuff

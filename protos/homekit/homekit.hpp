@@ -9,8 +9,7 @@
 #include <hap_apple_chars.h>
 
 namespace stuff {
-namespace targets {
-namespace esp32 {
+namespace protos {
 namespace homekit {
 
 void init(const char *setupCode, const char *setupID);
@@ -234,7 +233,6 @@ inline void resetPairings() {
 	::hap_reset_pairings();
 }
 
-}
 }
 }
 }

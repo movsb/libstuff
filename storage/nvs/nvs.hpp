@@ -13,8 +13,6 @@
 #define NVS_DEF_NS   "nvs"
 
 namespace stuff {
-namespace targets {
-namespace esp32 {
 namespace storage {
 namespace nvs {
 
@@ -73,6 +71,4 @@ bool match(const char *pattern, const char *input);
 
 } // namespace nvs
 } // namespace storage
-} // namespace esp32
-} // namespace targets
 } // namespace stuff

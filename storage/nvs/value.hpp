@@ -4,8 +4,6 @@
 #include <string>
 
 namespace stuff {
-namespace targets {
-namespace esp32 {
 namespace storage {
 namespace nvs {
 
@@ -49,8 +47,6 @@ struct Value {
 	Type ty;
 };
 
-}
-}
 }
 }
 }
