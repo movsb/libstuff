@@ -38,6 +38,7 @@ int _log_printf(const char *attr, Args&&... args) {
 	if (*attr) {
 		n += _outputStr(__CSI_RST);
 	}
+	n += _outputStr("\n");
 	return n;
 }
 
