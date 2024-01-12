@@ -21,9 +21,10 @@ int _outputStr(const char* s) {
 	return n;
 }
 
-static const char* const digits = "0123456789abcdefghijklmnopqrstuvwxyz";
+static const char* const lowerDigits = "0123456789abcdef";
+static const char* const upperDigits = "0123456789ABCDEF";
 
-static int _formatBits(char (&buf)[1+64+1], uint64_t u, uint8_t base, bool neg) {
+static int _formatBits(char (&buf)[1+64+1], uint64_t u, uint8_t base, bool neg, const char* const digits) {
 	auto &a = buf;
 
 	uint8_t i = std::size(buf);
@@ -51,15 +52,10 @@ static int _formatBits(char (&buf)[1+64+1], uint64_t u, uint8_t base, bool neg) 
 	return i;
 }
 
-static int _outputNumber(uint64_t u, uint8_t base, bool neg) {
+static int _outputNumber(uint64_t u, uint8_t base, bool neg, const char* digits) {
 	char buf[66];
-	int n = 0;
-	auto p = _formatBits(buf, u, base, neg);
-	while(buf[p]) {
-		n += _outputChar(buf[p]);
-		p++;
-	}
-	return n;
+	auto p = _formatBits(buf, u, base, neg, digits);
+	return _outputStr(&buf[p]);
 }
 
 int _skip2percent(const char* &fmt) {
@@ -126,10 +122,16 @@ int _printf(const char *&fmt, uint64_t i, bool neg) {
 		fmt++;
 		// fallthrough
 	case 0:
-		return _outputNumber(i, 10, neg);
+		return _outputNumber(i, 10, neg, lowerDigits);
 	case 'b':
 		fmt++;
-		return _outputNumber(i, 2, neg);
+		return _outputNumber(i, 2, neg, lowerDigits);
+	case 'x':
+		fmt++;
+		return _outputNumber(i, 16, neg, lowerDigits);
+	case 'X':
+		fmt++;
+		return _outputNumber(i, 16, neg, upperDigits);
 	default:
 		return n + _unknown(*fmt++);
 	}
@@ -154,6 +156,30 @@ int _printf(const char *&fmt, const char *s) {
 		return n;
 	default:
 		return n + _unknown(*fmt++);
+	}
+}
+
+int _printf(const char *&fmt, const void *p) {
+	int n = _skip2percent(fmt);
+	switch(*fmt) {
+		case 'p':
+			fmt++;
+			// fallthrough
+		case 0: {
+			char buf[66];
+			auto i = _formatBits(buf, reinterpret_cast<uint64_t>(p), 16, false, upperDigits);
+			// 计算当前位数，并默认总是补全 0
+			auto nd = std::size(buf) - i - 1;
+			while(nd < sizeof(p) * 2) {
+				buf[--i] = '0';
+				nd++;
+			}
+			buf[--i] = 'x';
+			buf[--i] = '0';
+			return _outputStr(&buf[i]);
+		}
+		default:
+			return n + _unknown(*fmt++);
 	}
 }
 

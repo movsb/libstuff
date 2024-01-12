@@ -50,7 +50,7 @@
  *   指针：
  * 
  *   - %d
- *   - %p 0x 表示的十六进制 - todo
+ *   - %p 0x 表示的十六进制，固定显示为指针长度，大写字母。
 */
 
 namespace stuff {
@@ -58,11 +58,9 @@ namespace base {
 namespace alts {
 
 int _outputStr(const char* s);
-
-int _printf(const char *&fmt, int64_t i);
-
 int _skip2percent(const char* &fmt);
 int _unknown(char c);
+
 int _printf(const char *&fmt, bool b);
 int _printf(const char *&fmt, char c);
 int _printf(const char *&fmt, int64_t i);
@@ -82,19 +80,14 @@ inline int _printf(const char *&fmt, unsigned int i) { return _printf(fmt, stati
 // int _printf(const char *&fmt, double i);
 
 int _printf(const char *&fmt, const char *s);
+int _printf(const char *&fmt, const void *p);
 
 template<typename T>
 int _printf(const char* &fmt, T *t) {
-	int n = _skip2percent(fmt);
-	switch (*fmt) {
-	case 'd':
-		fmt--;
-		// fallthrough
-	case '0':
-		return n + _printf(fmt, reinterpret_cast<uint64_t>(t));
-	default:
-		return n + _unknown(*fmt++);
-	}
+	return _printf(fmt, static_cast<const void*>(t));
+}
+inline int _printf(const char *&fmt, std::nullptr_t) {
+	return _printf(fmt, static_cast<const void*>(nullptr));
 }
 
 template <typename T>
@@ -109,16 +102,7 @@ public:
 template <typename T>
 typename std::enable_if<_has_to_string<T>::value, int >::type
 _printf(const char* &fmt, const T &t) {
-	int n = _skip2percent(fmt);
-	switch (*fmt) {
-	case 's':
-		fmt--;
-		// fallthrough
-	case 0:
-		return n + _printf(fmt, t.toString());
-	default:
-		return n + _unknown(*fmt++);
-	}
+	return _printf(fmt, t.toString());
 }
 
 template<typename F, typename... Args>
@@ -127,6 +111,7 @@ int _printf(const char* &fmt, const F& first, Args&&... args) {
 	n += _printf(fmt, std::forward<Args&&>(args)...);
 	return n;
 }
+
 template<typename... Args>
 int printf(const char* fmt, Args&&... args) {
 	int n = _printf(fmt, std::forward<Args&&>(args)...);
@@ -135,6 +120,7 @@ int printf(const char* fmt, Args&&... args) {
 	}
 	return n;
 }
+
 template<>
 inline int printf(const char* s) {
 	return _outputStr(s);
