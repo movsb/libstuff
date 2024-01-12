@@ -131,8 +131,7 @@ template<typename... Args>
 int printf(const char* fmt, Args&&... args) {
 	int n = _printf(fmt, std::forward<Args&&>(args)...);
 	if (*fmt) {
-		const char* remain = "%s";
-		n += _printf(remain, fmt);
+		n += _outputStr(fmt);
 	}
 	return n;
 }

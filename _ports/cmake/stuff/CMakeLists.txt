@@ -25,6 +25,7 @@ set(__sb ${CMAKE_CURRENT_LIST_DIR}/../../..)
 
 set(subDirs
 	base/alts
+	base/log
 	base/time
 	drivers/gpio
 	modules/xx1838
