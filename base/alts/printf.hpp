@@ -1,3 +1,5 @@
+#pragma once
+
 #include <utility>
 #include <type_traits>
 
@@ -59,7 +61,6 @@ namespace stuff {
 namespace base {
 namespace alts {
 
-int _outputChar(char c);
 int _outputStr(const char* s);
 
 int _printf(const char *&fmt, int64_t i);
@@ -77,11 +78,12 @@ inline int _printf(const char *&fmt, int16_t i)      { return _printf(fmt, stati
 inline int _printf(const char *&fmt, uint16_t i)     { return _printf(fmt, static_cast<uint64_t>(i)); }
 inline int _printf(const char *&fmt, int32_t i)      { return _printf(fmt, static_cast<int64_t>(i));  }
 inline int _printf(const char *&fmt, uint32_t i)     { return _printf(fmt, static_cast<uint64_t>(i)); }
-// inline int _printf(const char *&fmt, int i)          { return _printf(fmt, static_cast<int64_t>(i));  }
-// inline int _printf(const char *&fmt, unsigned int i) { return _printf(fmt, static_cast<uint64_t>(i)); }
 
-int _printf(const char *&fmt, float i);
-int _printf(const char *&fmt, double i);
+inline int _printf(const char *&fmt, int i)          { return _printf(fmt, static_cast<int64_t>(i));  }
+inline int _printf(const char *&fmt, unsigned int i) { return _printf(fmt, static_cast<uint64_t>(i)); }
+
+// int _printf(const char *&fmt, float i);
+// int _printf(const char *&fmt, double i);
 
 int _printf(const char *&fmt, const char *s);
 

@@ -1,16 +1,65 @@
-#include <stuff/base/alts/printf.hpp>
-#include <cstdio>
+#include "printf.hpp"
 #include <inttypes.h>
+#include <array>
+
+extern "C" int write(int fd, const char* buf, int size);
 
 namespace stuff {
 namespace base {
 namespace alts {
 
-int _outputChar(char c) {
-	return ::putchar(c);
+static inline int _outputChar(char c) {
+	return write(1, &c, 1);
 }
+
 int _outputStr(const char* s) {
-	return ::printf("%s", s);
+	int n = 0;
+	while(*s) {
+		n += _outputChar(*s);
+		s++;
+	}
+	return n;
+}
+
+static const char* const digits = "0123456789abcdefghijklmnopqrstuvwxyz";
+
+static int _formatBits(char (&buf)[1+64+1], uint64_t u, uint8_t base, bool neg) {
+	auto &a = buf;
+
+	uint8_t i = std::size(buf);
+	i--;
+	a[i] = '\0';
+
+	if (neg) u = -u;
+	
+	auto b = uint64_t(base);
+	while (u >= b) {
+		i--;
+		auto q = u / b;
+		a[i] = digits[u-q*b];
+		u = q;
+	}
+	// u < base
+	i--;
+	a[i] = digits[u];
+	
+	if (neg) {
+		i--;
+		a[i] = '-';
+	}
+	
+	return i;
+}
+
+static int _outputNumber(uint64_t u, uint8_t base, bool neg) {
+	char buf[66];
+	int n = 0;
+	auto p = _formatBits(buf, u, base, neg);
+	while(buf[p]) {
+		n += _outputChar(buf[p]);
+		p++;
+	}
+	return n;
 }
 
 int _skip2percent(const char* &fmt) {
@@ -69,9 +118,7 @@ int _printf(const char *&fmt, char c) {
 	}
 }
 
-int _printf(const char *&fmt, int64_t i) {
-	int msb;
-
+int _printf(const char *&fmt, uint64_t i, bool neg) {
 	int n = _skip2percent(fmt);
 	switch (*fmt) {
 	case 'v':
@@ -79,70 +126,21 @@ int _printf(const char *&fmt, int64_t i) {
 		fmt++;
 		// fallthrough
 	case 0:
-		return ::printf("%" PRId64, i);
-	case 'x':
-		fmt++;
-		return ::printf("%" PRIx64, i);
-	case 'X':
-		fmt++;
-		return ::printf("%" PRIX64, i);
+		return _outputNumber(i, 10, neg);
 	case 'b':
 		fmt++;
-		if (i < 0) {
-			n += _outputChar('-');
-			i = -i;
-		}
-		msb = 62;
-		for (; msb >= 1; msb--) {
-			if ((i & (int64_t(1) << msb)) == 0) {
-				continue;
-			}
-			break;
-		}
-		for (; msb >= 1; msb--) {
-			char c = (i & (int64_t(1) << msb)) == 0 ? '0' : '1';
-			n += _outputChar(c);
-		}
-		n += _outputChar(i & 1 ? '1' : '0');
-		return n;
+		return _outputNumber(i, 2, neg);
 	default:
 		return n + _unknown(*fmt++);
 	}
 }
+
+int _printf(const char *&fmt, int64_t i) {
+	return _printf(fmt, static_cast<uint64_t>(i), i < 0);
+}
+
 int _printf(const char *&fmt, uint64_t i) {
-	int msb;
-	int n = _skip2percent(fmt);
-	switch (*fmt) {
-	case 'v':
-	case 'd':
-		fmt++;
-		// fallthrough
-	case 0:
-		return ::printf("%" PRIu64, i);
-	case 'x':
-		fmt++;
-		return ::printf("%" PRIx64, i);
-	case 'X':
-		fmt++;
-		return ::printf("%" PRIX64, i);
-	case 'b':
-		fmt++;
-		msb = 63;
-		for (; msb >= 1; msb--) {
-			if ((i & (uint64_t(1) << msb)) == 0) {
-				continue;
-			}
-			break;
-		}
-		for (; msb >= 1; msb--) {
-			char c = (i & (uint64_t(1) << msb)) == 0 ? '0' : '1';
-			n += _outputChar(c);
-		}
-		n += _outputChar(i & 1 ? '1' : '0');
-		return n;
-	default:
-		return n + _unknown(*fmt++);
-	}
+	return _printf(fmt, i, false);
 }
 
 int _printf(const char *&fmt, const char *s) {
@@ -154,31 +152,6 @@ int _printf(const char *&fmt, const char *s) {
 	case 0:
 		n += _outputStr(s);
 		return n;
-	default:
-		return n + _unknown(*fmt++);
-	}
-}
-
-int _printf(const char *&fmt, float i) {
-	int n = _skip2percent(fmt);
-	switch (*fmt) {
-	case 'f':
-		fmt++;
-		// fallthrough
-	case 0:
-		return ::printf("%f", i);
-	default:
-		return n + _unknown(*fmt++);
-	}
-}
-int _printf(const char *&fmt, double i) {
-	int n = _skip2percent(fmt);
-	switch (*fmt) {
-	case 'f':
-		fmt++;
-		// fallthrough
-	case 0:
-		return ::printf("%f", i);
 	default:
 		return n + _unknown(*fmt++);
 	}
