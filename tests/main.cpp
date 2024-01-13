@@ -32,6 +32,7 @@ int main() {
 	alts::printf("Unicode: %c %c %c\n", U'桃', U'🍑', U'🍌');
 	alts::printf("Unicode: %c\n", 25105);
 	alts::printf("Unicode: %c\n", 0xFFFFFFFF);
+	alts::printf("%v %v\n", 'A', U'🍑');
 
 	return 0;
 }

@@ -11,46 +11,56 @@
  * 强类型的好处之一是：打印 int、int8、int16、int32、int64 不用再区分 %d、%ld、%u %llu 之类的了，可以统一成 %d。
  * 另外一个好处是：可以打印对象（比如包含 toString 的对象）。
  * 
- * 支持的类型：
+ * 类型支持：
  * 
- *   - bool
- *   - int, unsigned int
- *   - int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t
- *   - char* 输出为字符串
- *   - 其它任何指针（输出地址）
- *   - 带 `const char* toString()` 方法的结构体或类
+ *   - [X] bool
+ *   - [X] char, unsigned char, char32_t
+ *   - [X] int, unsigned int
+ *   - [X] int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t
+ *   - [X] char* 输出为字符串
+ *   - [X] 其它任何指针（输出地址）
+ *   - [X] 带 `const char* toString()` 方法的结构体或类
  *
  * 支持的格式：
  * 
  *   常规：
  * 
- *   - %% 字面值 %
- *   - %v 值的默认格式
- *   - %t 布尔值：true / false
- *   
- *   整数：
+ *   - [X] %% 字面值 %
+ *   - [X] %v 值的默认格式
+ *
+ *   布尔（%v = %t）：
+ *
+ *   - [X] %t 布尔值：true / false
+ *   - [X] %v = %t
  * 
- *   - %d 整数的十进制
- *   - [ ] %b 整数的二进制
- *   - [X] %c unicode 码点值
- *   - [ ] %o 整数的八进制 - todo
+ *   字符（%v = %c）：
+ * 
+ *   - [X] %c 对应的 Unicode 符号。
+ * 
+ *   整数（%v = %d）：
+ * 
+ *   - [X] %b 整数的二进制
+ *   - [ ] %o 整数的八进制
+ *   - [X] %d 整数的十进制
  *   - [X] %x 十六进制（小写）
  *   - [X] %X 十六进制（大写）
+ *   - [X] %c Unicode 码点值
  *   
  *   浮点数：
  * 
- *   （待支持）
+ *   - [ ] %f
  * 
- *   字符串/字节数组：
- *   
+ *   字符串（%v = %s）：
+ *
  *   - [X] %s 字符串
- *   - [ ] %X - todo 
- *   - [ ] %x - todo
+ *   - [ ] %X
+ *   - [ ] %x
  * 
- *   指针：
+ *   指针（%v = %p）：
  * 
- *   - %d
  *   - [X] %p 0x 表示的十六进制，固定显示为指针长度，大写字母。
+ * 
+ * @todo 整理单元测试。
 */
 
 namespace stuff {
@@ -61,10 +71,14 @@ int _outputStr(const char* s);
 int _skip2percent(const char* &fmt);
 int _unknown(char c);
 
+int _printf(const char *&fmt, bool b);
+int _printf(const char *&fmt, char32_t c);
 int _printf(const char *&fmt,   signed long long int i);
 int _printf(const char *&fmt, unsigned long long int u);
-inline int _printf(const char *&fmt, char               c) { return _printf(fmt, static_cast<  signed long long int>(c));  }
-inline int _printf(const char *&fmt, char32_t           c) { return _printf(fmt, static_cast<unsigned long long int>(c));  }
+int _printf(const char *&fmt, const char *s);
+int _printf(const char *&fmt, const void *p);
+
+inline int _printf(const char *&fmt, char               c) { return _printf(fmt, static_cast<char32_t>(c));                }
 inline int _printf(const char *&fmt,   signed char      i) { return _printf(fmt, static_cast<  signed long long int>(i));  }
 inline int _printf(const char *&fmt, unsigned char      u) { return _printf(fmt, static_cast<  signed long long int>(u));  }
 inline int _printf(const char *&fmt,   signed short int i) { return _printf(fmt, static_cast<  signed long long int>(i));  }
@@ -73,10 +87,6 @@ inline int _printf(const char *&fmt,   signed int       i) { return _printf(fmt,
 inline int _printf(const char *&fmt, unsigned int       u) { return _printf(fmt, static_cast<unsigned long long int>(u));  }
 inline int _printf(const char *&fmt,   signed long int  i) { return _printf(fmt, static_cast<  signed long long int>(i));  }
 inline int _printf(const char *&fmt, unsigned long int  u) { return _printf(fmt, static_cast<unsigned long long int>(u));  }
-
-int _printf(const char *&fmt, bool b);
-int _printf(const char *&fmt, const char *s);
-int _printf(const char *&fmt, const void *p);
 
 template<typename T>
 int _printf(const char* &fmt, T *t) {
