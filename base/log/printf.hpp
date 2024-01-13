@@ -5,80 +5,6 @@
 
 #include <stdint.h>
 
-/**
- * @brief 替换 printf 的一种强类型实现。接收任意个数的参数并输出。
- *
- * 别看重载函数非常多，其实只对外暴露了一个函数：
- * 
- *     template<typename... Args>
- *     int printf(const char* fmt, Args&&... args);
- *
- * 以及一些预定义的样式：Black, Red, Green...
- *
- * 所有以下划线开头的函数（比如：_printf）外部均不可使用。
- * 
- * 强类型的好处之一是：打印 int、int8、int16、int32、int64 不用再区分 %d、%ld、%u %llu 之类的了，可以统一成 %d。
- * 另外一个好处是：可以打印对象（比如包含 toString 的对象）。
- * 
- * 类型支持：
- * 
- *   - [X] bool
- *   - [X] char, unsigned char, char32_t
- *   - [X] int, unsigned int
- *   - [X] int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t
- *   - [X] char* 输出为字符串
- *   - [X] 其它任何指针（输出地址）
- *   - [X] 带 `const char* toString()` 方法的结构体或类
- *
- * 格式支持：
- * 
- *   常规：
- * 
- *   - [X] %% 字面值 %
- *   - [X] %v 值的默认格式
- *
- *   布尔（%v = %t）：
- *
- *   - [X] %t 布尔值：true / false
- *   - [X] %v = %t
- * 
- *   字符（%v = %c）：
- * 
- *   - [X] %c 对应的 Unicode 符号。
- * 
- *   整数（%v = %d）：
- * 
- *   - [X] %b 整数的二进制
- *   - [o] %o 整数的八进制
- *   - [X] %d 整数的十进制
- *   - [X] %x 十六进制（小写）
- *   - [X] %X 十六进制（大写）
- *   - [X] %c Unicode 码点值
- *   
- *   浮点数：
- * 
- *   - [ ] %f
- * 
- *   字符串（%v = %s）：
- *
- *   - [X] %s 字符串
- *   - [ ] %X
- *   - [ ] %x
- * 
- *   指针（%v = %p）：
- * 
- *   - [X] %p 0x 表示的十六进制，固定显示为指针长度，大写字母。
- *
- * 样式支持：
- * 
- * - 颜色
- * - 字体
- * 
- * @todo 整理单元测试。
- * @bug 不支持类似 %[0]s 的表示。因为实现方式使用了 C++ 的模板展开，无法提前和延迟获取到顺序不一致的参数。无解，但是很少被人知道/使用。
- * @bug 多次 printf 调用之间的样式无法嵌套。
-*/
-
 namespace stuff {
 namespace base {
 namespace alts {
@@ -204,10 +130,12 @@ namespace style {
 		 * @brief 对外暴露的样式的装饰器类。
 		*/
 		///@{
-		#define __ADD_STYLE(_name, _style) \
-			template<typename T> \
-			struct _name : public style::__Wrap<T> { \
-				_name(const T &t) : style::__Wrap<T>(style::_style, t) {} \
+		#define __ADD_STYLE(_name, _style)                  \
+			template<typename T>                            \
+			struct _name : public style::__Wrap<T> {        \
+				_name(const T &t)                           \
+					: style::__Wrap<T>(style::_style, t)    \
+				{}                                          \
 			}
 			__ADD_STYLE(Black,  black);
 			__ADD_STYLE(White,  white);
