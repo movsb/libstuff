@@ -2,6 +2,7 @@
 #include <inttypes.h>
 #include <array>
 #include <assert.h>
+#include <cstring>
 
 /**
  * @note 所有 case 0 的地方，是为了打印没有格式化/格式化控制符少于参数个数的那些参数的。
