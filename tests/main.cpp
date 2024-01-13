@@ -21,17 +21,19 @@ int main() {
 		int64_t i = 9;
 		uint64_t j = 10;
 
-		alts::printf("%d %d %d %d %d %d %d %d %d %d\n", a, b, c, d, e, f, g, h, i, j);
 		alts::printf("%b %b %b %b %b %b %b %b %b %b\n", a, b, c, d, e, f, g, h, i, j);
+		alts::printf("%o %o %o %o %o %o %o %o %o %o\n", a, b, c, d, e, f, g, h, i, j);
+		alts::printf("%d %d %d %d %d %d %d %d %d %d\n", a, b, c, d, e, f, g, h, i, j);
 		alts::printf("%x %x %x %x %x %x %x %x %x %x\n", a, b, c, d, e, f, g, h, i, j);
 		alts::printf("%X %X %X %X %X %X %X %X %X %X\n", a, b, c, d, e, f, g, h, i, j);
+		alts::printf("%o\n", '\e');
 	}
 
 	alts::printf("hello stuff %s\n");
 	
 	alts::printf("Unicode: %c %c %c\n", U'桃', U'🍑', U'🍌');
 	alts::printf("Unicode: %c\n", 25105);
-	alts::printf("Unicode: %c\n", 0xFFFFFFFF);
+	alts::printf("Unicode: %c (yes, a question mark)\n", 0xFFFFFFFF);
 	alts::printf("%v %v\n", 'A', U'🍑');
 
 	return 0;

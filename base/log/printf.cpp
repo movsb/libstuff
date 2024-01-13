@@ -150,9 +150,10 @@ int _printf(const char *&fmt, char32_t c) {
 		fmt++;
 		// fallthrough
 	case 0:
-		return _outputRune(static_cast<uint64_t>(c));
+		return n + _outputRune(static_cast<uint64_t>(c));
 	default:
-		return _printf(fmt, static_cast<uint64_t>(c), false);
+		fmt--;
+		return n + _printf(fmt, static_cast<uint64_t>(c), false);
 	}
 }
 
@@ -168,6 +169,9 @@ int _printf(const char *&fmt, uint64_t u, bool neg) {
 	case 'b':
 		fmt++;
 		return _outputNumber(u, 2, neg, lowerDigits);
+	case 'o':
+		fmt++;
+		return _outputNumber(u, 8, neg, lowerDigits);
 	case 'x':
 		fmt++;
 		return _outputNumber(u, 16, neg, lowerDigits);
