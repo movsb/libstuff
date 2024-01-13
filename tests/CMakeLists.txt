@@ -4,7 +4,7 @@ project(tests)
 
 set(CMAKE_CXX_FLAGS "-std=gnu++17 -g")
 
-add_executable(main main.cpp)
+add_executable(main log.cpp)
 
 include(../_ports/cmake/stuff/CMakeLists.txt)
 stuff_init_target(main)

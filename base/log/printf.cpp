@@ -1,6 +1,12 @@
 #include "printf.hpp"
 #include <inttypes.h>
 #include <array>
+#include <assert.h>
+
+/**
+ * @note 所有 case 0 的地方，是为了打印没有格式化/格式化控制符少于参数个数的那些参数的。
+ *          目前已经按默认格式仍然输出。
+*/
 
 extern "C" int write(int fd, const char* buf, int size);
 
@@ -216,7 +222,8 @@ int _printf(const char *&fmt, const void *p) {
 		case 'p':
 			fmt++;
 			// fallthrough
-		case 0: {
+		case 0:
+		{
 			char buf[66];
 			auto i = _formatBits(buf, reinterpret_cast<uint64_t>(p), 16, false, upperDigits);
 			// 计算当前位数，并默认总是补全 0
@@ -232,6 +239,74 @@ int _printf(const char *&fmt, const void *p) {
 		default:
 			return n + _unknown(*fmt++);
 	}
+}
+
+// https://gist.github.com/JBlond/2fea43a3049b38287e5e9cefc87b2124
+#define __CSI_BEG   "\033["
+#define __CSI_END   "m"
+#define __CSI_RST   (__CSI_BEG "0" __CSI_END)
+
+#define __BLACK     "30"
+#define __RED       "31"
+#define __GREEN     "32"
+#define __YELLOW    "33"
+#define __BLUE      "34"
+#define __PURPLE    "35"
+#define __CYAN      "36"
+#define __WHITE     "37"
+
+#define __RESET     "0"
+#define __BOLD      "1"
+#define __UNDERLINE "4"
+#define __DELIM     ";"
+
+int _printf(const char* & /* fmt */, const style::Style &s) {
+	if (s.f & style::__empty_format && s.c == style::__empty_color) {
+		return 0;
+	}
+
+	if (s.f & style::reset) {
+		return _outputStr(__CSI_RST);
+	}
+
+	char buf[64] = { __CSI_BEG };
+	bool first = true;
+	auto cat = [&](const char* s) {
+		if (first) {
+			first = false;
+		} else {
+			std::strcat(buf, __DELIM);
+		}
+		std::strcat(buf, s);
+	};
+
+	// std::strcat(buf, __RESET);
+
+	if (s.f & style::bold) {
+		cat(__BOLD);
+	}
+	if (s.f & style::underline) {
+		cat(__UNDERLINE);
+	}
+
+	switch (s.c) {
+	case style::black:  cat(__BLACK); break;
+	case style::white:  cat(__WHITE); break;
+	case style::red:    cat(__RED);   break;
+	case style::green:  cat(__GREEN); break;
+	case style::yellow: cat(__YELLOW);break;
+	case style::blue:   cat(__BLUE);  break;
+	case style::purple: cat(__PURPLE);break;
+	case style::cyan:   cat(__CYAN);  break;
+	default: break;
+	}
+	
+	std::strcat(buf, __CSI_END);
+	
+	// just in case
+	assert(std::strlen(buf) < std::size(buf));
+
+	return _outputStr(buf);
 }
 
 } // namespace alts
