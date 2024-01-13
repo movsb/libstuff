@@ -1,27 +1,14 @@
 {
     "configurations": [
         {
-            "name": "ESP32-C3",
+            "name": "MacOS",
             "includePath": [
-                "/Users/tao/code/espressif/esp-idf/**",
-                "/Users/tao/code/espressif/esp-homekit-sdk/**",
-                "/Users/tao/code/espressif/esp-idf/components/newlib/platform_include",
-                "${workspaceFolder}/**",
-                "/Users/tao/code/circuits/playground/build/config",
-                "/Users/tao/code/espressif/esp-idf/components/freertos/FreeRTOS-Kernel/include",
+                "${workspaceFolder}/_include"
             ],
-            "defines": [
-                "CONFIG_IDF_TARGET_ESP32C3",
-                "LWIP_DNS",
-                "LWIP_SOCKET",
-                "LWIP_PROVIDE_ERRNO",
-                "LWIP_COMPAT_SOCKETS=0"
-            ],
+            "defines": [ ],
             "macFrameworkPath": [],
-            "compilerPath": "~/.espressif/tools/riscv32-esp-elf/esp-12.2.0_20230208/riscv32-esp-elf/bin/riscv32-esp-elf-g++",
             "cStandard": "c23",
             "cppStandard": "c++23",
-            "intelliSenseMode": "gcc-arm",
             "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],

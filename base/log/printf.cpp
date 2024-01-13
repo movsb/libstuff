@@ -97,24 +97,7 @@ int _printf(const char *&fmt, bool b) {
 	}
 }
 
-int _printf(const char *&fmt, char c) {
-	int n = _skip2percent(fmt);
-	switch (*fmt) {
-	case 'v':
-	case 'c':
-		fmt++;
-		// fallthrough
-	case 0:
-		return n + _outputChar(c);
-	case 'd':
-		fmt--;
-		return n + _printf(fmt, static_cast<int64_t>(c));
-	default:
-		return n + _unknown(*fmt++);
-	}
-}
-
-int _printf(const char *&fmt, uint64_t i, bool neg) {
+int _printf(const char *&fmt, uint64_t u, bool neg) {
 	int n = _skip2percent(fmt);
 	switch (*fmt) {
 	case 'v':
@@ -122,27 +105,27 @@ int _printf(const char *&fmt, uint64_t i, bool neg) {
 		fmt++;
 		// fallthrough
 	case 0:
-		return _outputNumber(i, 10, neg, lowerDigits);
+		return _outputNumber(u, 10, neg, lowerDigits);
 	case 'b':
 		fmt++;
-		return _outputNumber(i, 2, neg, lowerDigits);
+		return _outputNumber(u, 2, neg, lowerDigits);
 	case 'x':
 		fmt++;
-		return _outputNumber(i, 16, neg, lowerDigits);
+		return _outputNumber(u, 16, neg, lowerDigits);
 	case 'X':
 		fmt++;
-		return _outputNumber(i, 16, neg, upperDigits);
+		return _outputNumber(u, 16, neg, upperDigits);
 	default:
 		return n + _unknown(*fmt++);
 	}
 }
 
-int _printf(const char *&fmt, int64_t i) {
+int _printf(const char *&fmt, signed long long int i) {
 	return _printf(fmt, static_cast<uint64_t>(i), i < 0);
 }
 
-int _printf(const char *&fmt, uint64_t i) {
-	return _printf(fmt, i, false);
+int _printf(const char *&fmt, unsigned long long int u) {
+	return _printf(fmt, static_cast<uint64_t>(u), false);
 }
 
 int _printf(const char *&fmt, const char *s) {

@@ -20,5 +20,7 @@
 		"chrono": "cpp",
 		"utility": "cpp"
 	},
-	"cmake.sourceDirectory": "/Users/tao/code/circuits/homekit-switch/_stuff/tests"
+	"cmake.sourceDirectory": "${workspaceFolder}/tests",
+	"cmake.buildDirectory": "${workspaceFolder}/tests/build",
+	"cmake.generator": "Unix Makefiles"
 }

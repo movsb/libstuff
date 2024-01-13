@@ -1,6 +1,6 @@
-#include <stuff/base/alts/printf.hpp>
+#include <stuff/base/log.hpp>
 
-using namespace::stuff::base;
+using namespace stuff::base;
 
 int main() {
 	// 字面值
@@ -26,13 +26,6 @@ int main() {
 		alts::printf("%b %b %b %b %b %b %b %b %b %b\n", a, b, c, d, e, f, g, h, i, j);
 		alts::printf("%x %x %x %x %x %x %x %x %x %x\n", a, b, c, d, e, f, g, h, i, j);
 		alts::printf("%X %X %X %X %X %X %X %X %X %X\n", a, b, c, d, e, f, g, h, i, j);
-	}
-	
-	// float
-	{
-		float i = 3.1415926;
-		double j = 3.1415926535897932384626;
-		alts::printf("%f %f\n", i, j);
 	}
 
 	alts::printf("hello stuff %s\n");

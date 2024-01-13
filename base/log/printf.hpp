@@ -61,24 +61,19 @@ int _outputStr(const char* s);
 int _skip2percent(const char* &fmt);
 int _unknown(char c);
 
+int _printf(const char *&fmt,   signed long long int i);
+int _printf(const char *&fmt, unsigned long long int u);
+
+inline int _printf(const char *&fmt,   signed char      i) { return _printf(fmt, static_cast<  signed long long int>(i));  }
+inline int _printf(const char *&fmt, unsigned char      u) { return _printf(fmt, static_cast<  signed long long int>(u));  }
+inline int _printf(const char *&fmt,   signed short int i) { return _printf(fmt, static_cast<  signed long long int>(i));  }
+inline int _printf(const char *&fmt, unsigned short int u) { return _printf(fmt, static_cast<unsigned long long int>(u));  }
+inline int _printf(const char *&fmt,   signed int       i) { return _printf(fmt, static_cast<  signed long long int>(i));  }
+inline int _printf(const char *&fmt, unsigned int       u) { return _printf(fmt, static_cast<unsigned long long int>(u));  }
+inline int _printf(const char *&fmt,   signed long int  i) { return _printf(fmt, static_cast<  signed long long int>(i));  }
+inline int _printf(const char *&fmt, unsigned long int  u) { return _printf(fmt, static_cast<unsigned long long int>(u));  }
+
 int _printf(const char *&fmt, bool b);
-int _printf(const char *&fmt, char c);
-int _printf(const char *&fmt, int64_t i);
-int _printf(const char *&fmt, uint64_t i);
-
-inline int _printf(const char *&fmt, int8_t i)       { return _printf(fmt, static_cast<int64_t>(i));  }
-inline int _printf(const char *&fmt, uint8_t i)      { return _printf(fmt, static_cast<uint64_t>(i)); }
-inline int _printf(const char *&fmt, int16_t i)      { return _printf(fmt, static_cast<int64_t>(i));  }
-inline int _printf(const char *&fmt, uint16_t i)     { return _printf(fmt, static_cast<uint64_t>(i)); }
-inline int _printf(const char *&fmt, int32_t i)      { return _printf(fmt, static_cast<int64_t>(i));  }
-inline int _printf(const char *&fmt, uint32_t i)     { return _printf(fmt, static_cast<uint64_t>(i)); }
-
-inline int _printf(const char *&fmt, int i)          { return _printf(fmt, static_cast<int64_t>(i));  }
-inline int _printf(const char *&fmt, unsigned int i) { return _printf(fmt, static_cast<uint64_t>(i)); }
-
-// int _printf(const char *&fmt, float i);
-// int _printf(const char *&fmt, double i);
-
 int _printf(const char *&fmt, const char *s);
 int _printf(const char *&fmt, const void *p);
 

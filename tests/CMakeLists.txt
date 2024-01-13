@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(stuff)
+project(tests)
 
 set(CMAKE_CXX_FLAGS "-std=gnu++17 -g")
 
-add_executable(main url.cpp)
+add_executable(main main.cpp)
 
-include(../stuff.cmake)
-stuff_init(main)
+include(../_ports/cmake/stuff/CMakeLists.txt)
+stuff_init_target(main)
