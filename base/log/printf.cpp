@@ -58,6 +58,51 @@ static int _outputNumber(uint64_t u, uint8_t base, bool neg, const char* digits)
 	return _outputStr(&buf[p]);
 }
 
+// 2023 年每个软件开发者都必须知道的关于 Unicode 的最基本的知识（仍然不准找借口！）
+// https://blog.xinshijiededa.men/unicode/
+// https://tonsky.me/blog/unicode/
+//
+// https://en.cppreference.com/w/cpp/language/character_literal
+/*
+U+0000..007F    0xxxxxxx
+U+0080..07FF    110xxxxx    10xxxxxx
+U+0800..FFFF    1110xxxx    10xxxxxx    10xxxxxx
+U+10000..10FFFF 11110xxx    10xxxxxx    10xxxxxx    10xxxxxx
+*/
+static int _outputRune(uint64_t r) {
+	unsigned char buf[4+1];
+
+	if (r <= 0x7F) {
+		buf[0] = r;
+		buf[1] = 0;
+	} else if (r <= 0x07FF) {
+		buf[0] = 0b11000000 | (r >> 6           );
+		buf[1] = 0b10000000 | (r >> 0 & 0b111111);
+		buf[2] = 0;
+	} else if (r <= 0xFFFF) {
+		buf[0] = 0b11100000 | (r >> 12          );
+		buf[1] = 0b10000000 | (r >> 6 & 0b111111);
+		buf[2] = 0b10000000 | (r >> 0 & 0b111111);
+		buf[3] = 0;
+	} else if (r <= 0x10FFFF) {
+		buf[0] = 0b11110000 | (r >> 18          );
+		buf[1] = 0b10000000 | (r >> 12 & 0b111111);
+		buf[2] = 0b10000000 | (r >> 6  & 0b111111);
+		buf[3] = 0b10000000 | (r >> 0  & 0b111111);
+		buf[4] = 0;
+	} else {
+		// 其它无效字符替换成替换字符（Replacement Character）。
+		// U+FFFD, {EF, BF, BD}
+		// return _outputRune(U'�');
+		buf[0] = 0xEF;
+		buf[1] = 0xBF;
+		buf[2] = 0xBD;
+		buf[3] = 0;
+	}
+
+	return _outputStr(reinterpret_cast<const char*>(buf));
+}
+
 int _skip2percent(const char* &fmt) {
 	int n = 0;
 	while(*fmt && *fmt != '%') {
@@ -115,6 +160,9 @@ int _printf(const char *&fmt, uint64_t u, bool neg) {
 	case 'X':
 		fmt++;
 		return _outputNumber(u, 16, neg, upperDigits);
+	case 'c':
+		fmt++;
+		return _outputRune(u);
 	default:
 		return n + _unknown(*fmt++);
 	}

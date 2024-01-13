@@ -31,11 +31,11 @@
  *   整数：
  * 
  *   - %d 整数的十进制
- *   - %b 整数的二进制 - todo
- *   - %c unicode 码点值 - todo
- *   - %o 整数的八进制 - todo
- *   - %x 十六进制（小写）- todo
- *   - %X 十六进制（大写） - todo
+ *   - [ ] %b 整数的二进制
+ *   - [X] %c unicode 码点值
+ *   - [ ] %o 整数的八进制 - todo
+ *   - [X] %x 十六进制（小写）
+ *   - [X] %X 十六进制（大写）
  *   
  *   浮点数：
  * 
@@ -43,14 +43,14 @@
  * 
  *   字符串/字节数组：
  *   
- *   - %s 字符串
- *   - %X - todo 
- *   - %x - todo
+ *   - [X] %s 字符串
+ *   - [ ] %X - todo 
+ *   - [ ] %x - todo
  * 
  *   指针：
  * 
  *   - %d
- *   - %p 0x 表示的十六进制，固定显示为指针长度，大写字母。
+ *   - [X] %p 0x 表示的十六进制，固定显示为指针长度，大写字母。
 */
 
 namespace stuff {
@@ -63,7 +63,8 @@ int _unknown(char c);
 
 int _printf(const char *&fmt,   signed long long int i);
 int _printf(const char *&fmt, unsigned long long int u);
-
+inline int _printf(const char *&fmt, char               c) { return _printf(fmt, static_cast<  signed long long int>(c));  }
+inline int _printf(const char *&fmt, char32_t           c) { return _printf(fmt, static_cast<unsigned long long int>(c));  }
 inline int _printf(const char *&fmt,   signed char      i) { return _printf(fmt, static_cast<  signed long long int>(i));  }
 inline int _printf(const char *&fmt, unsigned char      u) { return _printf(fmt, static_cast<  signed long long int>(u));  }
 inline int _printf(const char *&fmt,   signed short int i) { return _printf(fmt, static_cast<  signed long long int>(i));  }

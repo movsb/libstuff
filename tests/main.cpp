@@ -3,8 +3,7 @@
 using namespace stuff::base;
 
 int main() {
-	// 字面值
-	alts::printf("%%\n");
+	alts::printf("Literal: %%, %c\n", '%');
 
 	// 布尔值
 	alts::printf("%t %t\n", true, false);
@@ -29,6 +28,10 @@ int main() {
 	}
 
 	alts::printf("hello stuff %s\n");
+	
+	alts::printf("Unicode: %c %c %c\n", U'桃', U'🍑', U'🍌');
+	alts::printf("Unicode: %c\n", 25105);
+	alts::printf("Unicode: %c\n", 0xFFFFFFFF);
+
 	return 0;
 }
-
