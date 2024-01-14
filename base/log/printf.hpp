@@ -1,9 +1,20 @@
 #pragma once
 
+#include <stdint.h>
+
 #include <utility>
 #include <type_traits>
 
-#include <stdint.h>
+/**
+ * @brief 标准库容器支持：按需添加。
+*/
+///@{
+#include <string>
+#include <vector>
+// 其实这几个 map 不用添加，因为统一用模板的写法适配了。
+#include <map>
+#include <unordered_map>
+///@}
 
 namespace stuff {
 namespace base {
@@ -190,36 +201,115 @@ _printf(const char* &fmt, const T &t) {
 ///@}
 
 /**
- * @brief 内部唯一泛型开展处理。
+ * @brief 标准库容器。
 */
-template<typename F, typename... Args>
-int _printf(const char* &fmt, const F& first, Args&&... args) {
-	int n = _printf(fmt, first);
-	n += _printf(fmt, std::forward<Args&&>(args)...);
+///@{
+// std::string
+inline int _printf(const char *&fmt, const std::string &s) {
+	return _printf(fmt, s.c_str());
+}
+
+// std::vector
+template<typename T>
+int _printf(const char *&fmt, const std::vector<T> &a) {
+	int n = _skip2percent(fmt);
+	if (*fmt == 'v') ++fmt;
+	else if (!*fmt) {}
+	else return n + _unknown(*fmt++);
+
+	n += _outputStr("[");
+	
+	bool first = true;
+	for(const auto &elem : a) {
+		if (first) first = false;
+		else { n += _outputStr(","); }
+		auto _fmt = "%v";
+		n += _printf(_fmt, elem);
+		n += _outputStr(_fmt);
+	}
+
+	n += _outputStr("]");
 	return n;
 }
 
+// std::pair
+template<typename T1, typename T2>
+int _printf(const char *&fmt, const std::pair<T1,T2> &pair) {
+	int n = _skip2percent(fmt);
+	if (*fmt == 'v') ++fmt;
+	else if (!*fmt) {}
+	else return n + _unknown(*fmt++);
+
+	{
+		const auto &k = pair.first;
+		auto _fmt = "%v:";
+		n += _printf(_fmt, k);
+		n += _outputStr(_fmt);
+	}
+
+	{
+		const auto &v = pair.second;
+		auto _fmt = "%v";
+		n += _printf(_fmt, v);
+		n += _outputStr(_fmt);
+	}
+
+	return n;
+}
+
+// 居然还能写两层 template，厉害极了，第一次见到。
+// Making a template work with both std::map and std::unordered_map
+// https://stackoverflow.com/a/33315998/3628322
+// @todo 支持 Hasher / Allocator 转发。
+// @bug 这种写法会不会匹配到全部满足 <K,V> 的类呢？
+template<template<typename...> class Map, typename K, typename V>
+int _printf(const char *&fmt, const Map<K, V> &m) {
+	int n = _skip2percent(fmt);
+	if (*fmt == 'v') ++fmt;
+	else if (!*fmt) {}
+	else return n + _unknown(*fmt++);
+
+	n += _outputStr("{");
+	
+	bool first = true;
+	
+	for(const auto &pair : m) {
+		if (first) first = false;
+		else { n += _outputStr(","); }
+		n += _printf(fmt, pair);
+	}
+
+	n += _outputStr("}");
+	return n;
+}
+///@}
+
 /**
- * @brief 不带参数的 printf 将视 fmt 为 raw 字符串输出。
+ * @brief 内部模板。
 */
+///{@
 template<typename = void>
-inline int _printf(const char* &fmt) {
+inline int _printf_t(const char* &fmt) {
 	int n = _outputStr(fmt);
 	// 不要用 n，输出长度不一定总是等于字符串长度
 	while(*fmt) fmt++;
 	return n;
 }
+template<typename F, typename... Args>
+int _printf_t(const char* &fmt, const F& first, Args&&... args) {
+	int n = _printf(fmt, first);
+	n += _printf_t(fmt, std::forward<Args&&>(args)...);
+	return n;
+}
+///@}
 
 /**
  * @brief 唯一对外暴露的模板函数。
 */
 template<typename... Args>
 int printf(const char* fmt, Args&&... args) {
-	int n = _printf(fmt, std::forward<Args&&>(args)...);
-	if (*fmt) {
-		n += _outputStr(fmt);
-	}
-	return n;
+	int n = _printf_t(fmt, std::forward<Args&&>(args)...);
+	return n + _outputStr(fmt);
 }
 
 } // namespace alts
