@@ -242,7 +242,6 @@ int _printf(const char *&fmt, const void *p) {
 	}
 }
 
-// https://gist.github.com/JBlond/2fea43a3049b38287e5e9cefc87b2124
 #define __CSI_BEG   "\033["
 #define __CSI_END   "m"
 #define __CSI_RST   (__CSI_BEG "0" __CSI_END)
@@ -258,7 +257,9 @@ int _printf(const char *&fmt, const void *p) {
 
 #define __RESET     "0"
 #define __BOLD      "1"
+#define __ITALIC    "3"
 #define __UNDERLINE "4"
+#define __BLINK     "5"
 #define __DELIM     ";"
 
 int _printf(const char* & /* fmt */, const style::Style &s) {
@@ -283,12 +284,10 @@ int _printf(const char* & /* fmt */, const style::Style &s) {
 
 	// std::strcat(buf, __RESET);
 
-	if (s.f & style::bold) {
-		cat(__BOLD);
-	}
-	if (s.f & style::underline) {
-		cat(__UNDERLINE);
-	}
+	if (s.f & style::bold)      cat(__BOLD);
+	if (s.f & style::italic)    cat(__ITALIC);
+	if (s.f & style::underline) cat(__UNDERLINE);
+	if (s.f & style::blink)     cat(__BLINK);
 
 	switch (s.c) {
 	case style::black:  cat(__BLACK); break;

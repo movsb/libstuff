@@ -11,9 +11,11 @@
 ///@{
 #include <string>
 #include <vector>
-// 其实这几个 map 不用添加，因为统一用模板的写法适配了。
 #include <map>
 #include <unordered_map>
+#include <set>
+#include <unordered_set>
+#include <array>
 ///@}
 
 namespace stuff {
@@ -90,7 +92,27 @@ _printf(const char* &fmt, const T &t) {
 ///@}
 
 /**
+ * @brief 前向声明（类型定义嵌套）。
+ */
+///@{
+int _printf(const char *&fmt, const std::string &s);
+template<typename K, typename V>
+int _printf(const char *&fmt, const std::map<K,V> &m);
+template<typename K, typename V>
+int _printf(const char *&fmt, const std::unordered_map<K,V> &m);
+template<typename T>
+int _printf(const char *&fmt, const std::vector<T> &v);
+template<typename T>
+int _printf(const char *&fmt, const std::set<T> &s);
+template<typename T>
+int _printf(const char *&fmt, const std::unordered_set<T> &s);
+template<typename T, std::size_t N>
+int _printf(const char *&fmt, const std::array<T,N> &a);
+///@}
+
+/**
  * @brief 样式。
+// @see https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
 */
 namespace style {
 	/**
@@ -102,7 +124,9 @@ namespace style {
 		__empty_format  = 1 << 0,
 		reset           = 1 << 1,
 		bold            = 1 << 2,
-		underline       = 1 << 3,
+		italic          = 1 << 3,
+		underline       = 1 << 4,
+		blink           = 1 << 5,
 	};
 
 	/**
@@ -159,6 +183,8 @@ namespace style {
 			
 			__ADD_STYLE(Bold,       bold);
 			__ADD_STYLE(Underline,  underline);
+			__ADD_STYLE(Italic,     italic);
+			__ADD_STYLE(Blink,      blink);
 		#undef __ADD_STYLE
 		///@}
 	} // namespace predefined
@@ -209,29 +235,6 @@ inline int _printf(const char *&fmt, const std::string &s) {
 	return _printf(fmt, s.c_str());
 }
 
-// std::vector
-template<typename T>
-int _printf(const char *&fmt, const std::vector<T> &a) {
-	int n = _skip2percent(fmt);
-	if (*fmt == 'v') ++fmt;
-	else if (!*fmt) {}
-	else return n + _unknown(*fmt++);
-
-	n += _outputStr("[");
-	
-	bool first = true;
-	for(const auto &elem : a) {
-		if (first) first = false;
-		else { n += _outputStr(","); }
-		auto _fmt = "%v";
-		n += _printf(_fmt, elem);
-		n += _outputStr(_fmt);
-	}
-
-	n += _outputStr("]");
-	return n;
-}
-
 // std::pair
 template<typename T1, typename T2>
 int _printf(const char *&fmt, const std::pair<T1,T2> &pair) {
@@ -257,13 +260,13 @@ int _printf(const char *&fmt, const std::pair<T1,T2> &pair) {
 	return n;
 }
 
-// 居然还能写两层 template，厉害极了，第一次见到。
+// std::map & std::unordered_map
 // Making a template work with both std::map and std::unordered_map
 // https://stackoverflow.com/a/33315998/3628322
+// https://stackoverflow.com/a/25750298/3628322
 // @todo 支持 Hasher / Allocator 转发。
-// @bug 这种写法会不会匹配到全部满足 <K,V> 的类呢？
-template<template<typename...> class Map, typename K, typename V>
-int _printf(const char *&fmt, const Map<K, V> &m) {
+template<typename Map>
+int _printf_map(const char *&fmt, const Map &m) {
 	int n = _skip2percent(fmt);
 	if (*fmt == 'v') ++fmt;
 	else if (!*fmt) {}
@@ -281,6 +284,53 @@ int _printf(const char *&fmt, const Map<K, V> &m) {
 
 	n += _outputStr("}");
 	return n;
+}
+template<typename K, typename V>
+int _printf(const char *&fmt, const std::map<K,V> &m) {
+	return _printf_map(fmt, m);
+}
+template<typename K, typename V>
+int _printf(const char *&fmt, const std::unordered_map<K,V> &m) {
+	return _printf_map(fmt, m);
+}
+
+// std::vector & std::set & std::unordered_set
+template<typename Array>
+int _printf_array(const char *&fmt, const Array &a) {
+	int n = _skip2percent(fmt);
+	if (*fmt == 'v') ++fmt;
+	else if (!*fmt) {}
+	else return n + _unknown(*fmt++);
+
+	n += _outputStr("[");
+	
+	bool first = true;
+	for(const auto &elem : a) {
+		if (first) first = false;
+		else { n += _outputStr(","); }
+		auto _fmt = "%v";
+		n += _printf(_fmt, elem);
+		n += _outputStr(_fmt);
+	}
+
+	n += _outputStr("]");
+	return n;
+}
+template<typename T>
+int _printf(const char *&fmt, const std::vector<T> &v) {
+	return _printf_array(fmt, v);
+}
+template<typename T>
+int _printf(const char *&fmt, const std::set<T> &s) {
+	return _printf_array(fmt, s);
+}
+template<typename T>
+int _printf(const char *&fmt, const std::unordered_set<T> &s) {
+	return _printf_array(fmt, s);
+}
+template<typename T, std::size_t N>
+int _printf(const char *&fmt, const std::array<T,N> &a) {
+	return _printf_array(fmt, a);
 }
 ///@}
 

@@ -4,6 +4,9 @@
 #include <vector>
 #include <map>
 #include <unordered_map>
+#include <set>
+#include <unordered_set>
+#include <array>
 
 using namespace stuff::base::log;
 
@@ -19,10 +22,10 @@ int main() {
 		log::Black('A'),
 		log::Bold(log::Underline(true))
 	);
-	logErr("Error: %v end", log::Green(true));
+	logErr("Error: %v end", log::Blink(log::Green(true)));
 	
 	std::string s("ABC");
-	logWarn("Str: %s", s);
+	logWarn("Str: %s", log::Italic(s));
 	
 	std::vector arr{std::vector{1,2,3}, std::vector{4,5,6}};
 	logFatal("Array: %v %v", arr, std::vector<int>{});
@@ -43,4 +46,10 @@ int main() {
 	std::unordered_map<int, int> um;
 	um[0] = 1;
 	logCyan("unordered_map: %v", um);
+	
+	std::set<int> set1{1,2,3,4,5,6};
+	logPurple("set: %v", set1);
+	
+	std::array<int,3> a1{1,2,3};
+	logYellow("array: %v, %v", a1, &a1);
 }
