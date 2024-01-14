@@ -17,7 +17,16 @@ int _log_printf(const alts::style::Style &styles, Args&&... args) {
 	n += alts::printf("\n");
 	return n;
 }
-	
+
+// 特化 _log_printf<char const (&)[N]>，这可以使得占用空间更少，
+// 只会生成 _log_printf<char const*> 类型。
+// 在 RISC-V 32-bit 上每个特化模板可以减少 0x2E 字节，可怜我只有 16KB 的 Flash 空间。
+// 在日志打印比较多的场合会很有效。
+template<std::size_t N>
+inline int _log_printf(const alts::style::Style &styles, const char (&a)[N]) {
+	return _log_printf(styles, static_cast<const char*>(a));
+}
+
 } // namespace __internal
 
 namespace log {
