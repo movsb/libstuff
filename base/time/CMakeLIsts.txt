@@ -9,7 +9,7 @@ if(ESP_PLATFORM)
 		${CMAKE_CURRENT_LIST_DIR}
 		time_esp32.cpp
 	)
-elseif(CH32V003)
+elseif(__STUFF_CH32V003__)
 	stuff_add_sources(
 		${CMAKE_CURRENT_LIST_DIR}
 		time_ch32v003.cpp

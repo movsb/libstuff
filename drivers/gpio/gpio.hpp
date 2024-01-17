@@ -4,60 +4,42 @@ namespace stuff {
 namespace drivers {
 namespace gpio{
 
-/**
- * @brief GPIO 的输出方向/工作模式枚举。
-*/
-struct Direction {
-	enum Value {
-		Disabled = 0,       // 禁用，
-		Input,              // 输入
-		Output,             // 输出
-		OutputOpenDrain,    // 开漏输出
-	};
-};
-
-/**
- * @brief 上拉/下拉配置。
- * 
- * 可以按位或。
-*/
-struct Pull {
-	enum Value {
-		Up      = 1,
-		Down    = 2,
-	};
-};
-
 namespace __abstract {
 
-template<typename T>
-class GPIO {
+/**
+ * @brief GPIO 抽象定义。
+ * @note 传递给实现函数的 t 不是常量，因为实现可能会有状态保存。
+*/
+
+template<typename T, typename Config>
+class __GPIO {
 public:
 	template<typename... Args>
-	GPIO(Args&&... args)
+	__GPIO(Args&&... args)
 		: _t{args...}
 		{}
-	operator T() const { return _t; }
+	operator T() { return &_t; }
 
 public:
 	void reset() {
-		extern void __stuff_reset(const T &t);
+		extern void __stuff_reset(T &t);
 		__stuff_reset(_t);
 	}
-	void setDirection(Direction::Value direction) {
-		extern void __stuff_set_direction(const T &t, Direction::Value direction);
-		__stuff_set_direction(_t, direction);
-	}
-	void setPull(Pull::Value pull) {
-		extern void __stuff_set_pull(const T &t, Pull::Value pull);
-		__stuff_set_pull(_t, pull);
+	void init(Config config) {
+		// 不要用 config Config&
+		// 否则初始化列表写起来恶心。
+		extern void __stuff_init(T &t, Config &config);
+		__stuff_init(_t, config);
 	}
 	void setValue(bool value) {
-		extern void __stuff_set_value(const T &t, bool value);
+		extern void __stuff_set_value(T &t, bool value);
 		__stuff_set_value(_t, value);
 	}
+	void setValue(int value) {
+		setValue(value > 0);
+	}
 	bool getValue() {
-		extern bool __stuff_get_value(const T &t);
+		extern bool __stuff_get_value(T &t);
 		return __stuff_get_value(_t);
 	}
 	
@@ -73,4 +55,6 @@ protected:
 
 #ifdef __STUFF_ESP32__
 	#include "gpio_esp32.hpp"
+#elif defined(__STUFF_CH32V003__)
+	#include "gpio_ch32v003.hpp"
 #endif
